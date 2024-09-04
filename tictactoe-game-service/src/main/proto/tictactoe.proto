@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.xxdc.oss.example.service";
+option java_outer_classname = "TicTacToeProto";
+
+package tictactoe;
+
+// The game service definition.
+service Game {
+    // Sends a greeting
+    rpc JoinGame (JoinRequest) returns (JoinReply) {}
+}
+
+// The request message containing the user message
+message JoinRequest {
+    string message = 1;
+}
+
+// The response message containing the join response
+message JoinReply {
+    string message = 1;
+}
