@@ -21,17 +21,27 @@ public class GameServiceTest {
 
     @Test
     public void testJoinGame_SuccessfulJoin() {
-        JoinRequest request = JoinRequest.newBuilder().setName("Player1").build();
-        Uni<JoinResponse> response = gameService.joinGame(request);
+        var request = JoinRequest.newBuilder().setName("Player1").build();
+        var requestTwo = JoinRequest.newBuilder().setName("Player2").build();
+        var response = gameService.joinGame(request);
+        var responseTwo = gameService.joinGame(requestTwo);
         response.subscribe().with(joinResponse -> {
+            System.out.println("Received response: " + joinResponse.getMessage());
+            assertEquals("Welcome Player1!", joinResponse.getMessage());
+        },
+        error -> {
+            System.out.println("Error: " + error.getMessage());
+        });
+        responseTwo.subscribe().with(joinResponse -> {
+            System.out.println("Received response: " + joinResponse.getMessage());
             assertEquals("Welcome Player1!", joinResponse.getMessage());
         });
     }
 
     @Test
     public void testJoinGame_EmptyMessage() {
-        JoinRequest request = JoinRequest.newBuilder().setName("").build();
-        Uni<JoinResponse> response = gameService.joinGame(request);
+        var request = JoinRequest.newBuilder().setName("").build();
+        var response = gameService.joinGame(request);
         response.subscribe().with(joinResponse -> {
             assertEquals("Welcome !", joinResponse.getMessage());
         });
@@ -39,8 +49,8 @@ public class GameServiceTest {
 
     @Test
     public void testJoinGame_NullMessage() {
-        JoinRequest request = JoinRequest.newBuilder().build();
-        Uni<JoinResponse> response = gameService.joinGame(request);
+        var request = JoinRequest.newBuilder().build();
+        var response = gameService.joinGame(request);
         response.subscribe().with(joinResponse -> {
             assertEquals("Welcome null!", joinResponse.getMessage());
         });
