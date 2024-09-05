@@ -20,15 +20,15 @@ service TicTacToeGame {
 
 // The request message containing the user message
 message JoinRequest {
-    string message = 1;
-    string name = 2;
+    string name = 1;
+    optional string message = 2;
 }
 
 // The response message containing the join response
 message JoinResponse {
-    string message = 1;
+    GameUpdate initialUpdate = 1;
     Player assigned_player = 2;
-    GameUpdate initialUpdate = 3;
+    string message = 3;
 }
 
 message GameUpdate {

@@ -20,7 +20,7 @@ public class GameService implements TicTacToeGame {
         gameManager.addJoinRequest(request);
         return Uni.createFrom()
             .item(JoinResponse.newBuilder()
-                .setMessage("Hello " + request.getMessage()).build()
+                .setMessage("Welcome " + request.getName() + "!").build()
             );
     }
 
