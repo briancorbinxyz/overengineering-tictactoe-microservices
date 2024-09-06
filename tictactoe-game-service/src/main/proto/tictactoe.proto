@@ -26,9 +26,10 @@ message JoinRequest {
 
 // The response message containing the join response
 message JoinResponse {
-    GameUpdate initialUpdate = 1;
-    Player assigned_player = 2;
-    string message = 3;
+    repeated string request_ids = 1;
+    GameUpdate initialUpdate = 2;
+    Player assigned_player = 3;
+    string message = 4;
 }
 
 message GameUpdate {

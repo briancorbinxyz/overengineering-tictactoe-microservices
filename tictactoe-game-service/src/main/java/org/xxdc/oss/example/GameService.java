@@ -3,6 +3,7 @@ package org.xxdc.oss.example;
 import org.xxdc.oss.example.service.TicTacToeGame;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.xxdc.oss.example.service.GameMoveRequest;
 import org.xxdc.oss.example.service.GameUpdate;
@@ -23,10 +24,16 @@ public class GameService implements TicTacToeGame {
 
         private final BroadcastProcessor<JoinRequest> joinRequests = BroadcastProcessor.create();
 
+        private final Multi<JoinResponse> joinResponses;
+
         public GameManager() {
             // activate the processor so that it starts processing events
-            joinRequests.log().subscribe().with(request -> {
+            joinRequests.log().subscribe();
+            joinResponses = joinRequests.onItem().transform(request -> {
                 System.out.println("Received join request: " + request);
+                return JoinResponse.newBuilder()
+                    .setMessage("Welcome " + request.getName() + "!")
+                    .build();
             });
         }
         
@@ -37,29 +44,19 @@ public class GameService implements TicTacToeGame {
         public Multi<JoinRequest> joinRequests() {
             return joinRequests;
         }
+
+        public Multi<JoinResponse> joinResponses() {
+            return joinResponses;
+        }
     }
 
     @Override
     public Uni<JoinResponse> joinGame(JoinRequest request) {
-        Uni<List<JoinRequest>> waitForMinimumPlayers = gameManager.joinRequests()
-            .select().first(2)
-            .collect().asList()
-            .log();
-
-        var response = waitForMinimumPlayers.onItem().transform(players -> {
-            System.out.println("Starting game with players: " + players);
-            return JoinResponse.newBuilder()
-                //.setMessage("Welcome " + request.getName() + "!")
-                .setMessage("Welcomed " + players.stream().map(JoinRequest::getName).reduce("", (a, b) -> a + b) + "!")
-                .build();
-        }).log().subscribe().with(players -> {
-            System.out.println("Received response: " + players);
-        });
+        var requestId = UUID.randomUUID().toString();
         gameManager.addJoinRequest(request);
-        return response;
+        return gameManager.joinResponses()
+            .select().first(1).toUni();
     }
-
-
 
     @Override
     public Uni<GameUpdate> makeMove(GameMoveRequest request) {

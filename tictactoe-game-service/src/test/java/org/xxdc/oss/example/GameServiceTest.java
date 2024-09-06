@@ -1,7 +1,6 @@
 package org.xxdc.oss.example;
 
 import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.xxdc.oss.example.service.JoinRequest;
