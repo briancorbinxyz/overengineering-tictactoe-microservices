@@ -3,12 +3,10 @@ package org.xxdc.oss.example;
 import org.xxdc.oss.example.service.TicTacToeGame;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.checkerframework.checker.units.qual.s;
 import org.xxdc.oss.example.service.GameMoveRequest;
 import org.xxdc.oss.example.service.GameUpdate;
 import org.xxdc.oss.example.service.JoinRequest;
@@ -17,8 +15,7 @@ import org.xxdc.oss.example.service.JoinResponse;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
-
+import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
 // https://quarkus.io/guides/logging
 import io.quarkus.logging.Log;
 
@@ -29,96 +26,55 @@ public class GameService implements TicTacToeGame {
 
     static class GameManager {
 
-        private final ConcurrentLinkedDeque<JoinRequest> requests = new ConcurrentLinkedDeque<>();
-        private final BroadcastProcessor<JoinRequest> joinRequests = BroadcastProcessor.create();
-        private final BroadcastProcessor<JoinRequest> botRequests = BroadcastProcessor.create();
-        private final BroadcastProcessor<JoinResponse> joinResponses = BroadcastProcessor.create();
+        private final ConcurrentLinkedQueue<JoinRequest> requestQueue = new ConcurrentLinkedQueue<>();
 
-        public GameManager() {
-            // TODO: split this into a separate game-manager-service
-            initMinimumPlayerPolicy();
-            initBotPolicy();
-        }
+        private final ConcurrentHashMap<JoinRequest, UnicastProcessor<JoinResponse>> processorByRequest = new ConcurrentHashMap<>();
 
-        private void initMinimumPlayerPolicy() {
-            joinRequests.onItem().transformToMulti(request -> {
-                requests.add(request);
-                Log.infov("Received a join request: {0}", request);
-                List<JoinRequest> nextMatch = new ArrayList<>(2);
-                var requestOne = requests.poll();
-                var requestTwo = requests.poll();
-                if (requestOne != null && requestTwo != null) {
-                    nextMatch.add(requestOne);
-                    nextMatch.add(requestTwo);
-
-                    var responseOne =  JoinResponse.newBuilder()
-                        .setRequestId(requestOne.getRequestId())
-                        .setMessage(requestOne.getName() + " VS " + requestTwo.getName() + "!")
-                        .build();
-
-                    var responseTwo =  JoinResponse.newBuilder()
-                        .setRequestId(requestTwo.getRequestId())
-                        .setMessage(requestOne.getName() + " VS " + requestTwo.getName() + "!")
-                        .build();
-
-                    return Multi.createFrom().items(responseOne, responseTwo);
+        public Uni<JoinResponse> makeMatchFor(JoinRequest request) {
+            Log.infov("Received a join request {0}", request);
+            return Uni.createFrom().emitter(emitter -> {
+                var processor = UnicastProcessor.<JoinResponse>create();
+                if (requestQueue.isEmpty()) {
+                    Log.infov("Waiting for player for request {0}", request);
+                    processorByRequest.put(request, processor);
+                    requestQueue.offer(request);
+                    processor.ifNoItem().after(Duration.ofSeconds(10)).recoverWithMulti(() -> {
+                        Log.infov("Creating a bot player for request {0}", request);
+                        requestQueue.remove(request);
+                        processorByRequest.remove(request);
+                        return makeBotMatchFor(request);
+                    }).subscribe().with(
+                        emitter::complete,
+                        emitter::fail,
+                        () -> {}
+                    );
                 } else {
-                    if (requestOne != null) {
-                        requests.push(requestOne);
-                        botRequests.onNext(requestOne);
-                    }
-                    if (requestTwo != null) {
-                        requests.push(requestTwo);
-                        botRequests.onNext(requestTwo);
-                    }
-                } 
-                return Multi.createFrom().empty();
-            }).merge().subscribe().with(joinResponse -> {
-                Log.infov("Sending a join response: {0}", joinResponse);
-                joinResponses.onNext(joinResponse);
+                    Log.infov("Found player for request {0}", request);
+                    var otherRequest = requestQueue.poll();
+
+                    // my response
+                    var response = JoinResponse.newBuilder()
+                        .setMessage(otherRequest.getName() + " VS. " + request.getName())
+                        .build();
+                    emitter.complete(response);
+
+                    // their response
+                    var otherResponse = JoinResponse.newBuilder()
+                        .setMessage(otherRequest.getName() + " VS. " + request.getName())
+                        .build();
+                    var otherRequestProcessor = processorByRequest.remove(otherRequest);
+                    otherRequestProcessor.onNext(otherResponse);
+                    otherRequestProcessor.onComplete();
+                }
             });
-        }
+        } 
 
-        private void initBotPolicy() {
-            // Wait 10 seconds before adding a bot player if there are unmatched players
-            // https://smallrye.io/smallrye-mutiny/2.0.0/guides/delaying-events/
-            botRequests.onItem()
-                .call(i -> Uni.createFrom().nullItem().onItem().delayIt().by(Duration.ofSeconds(10)))
-                .subscribe().with(r -> {
-                    // Add a bot player if there are unmatched players
-                    if (requests.size() % 2 == 1) {
-                        Log.infov("Creating a bot for request: {0}", r.getRequestId());
-                        var request = JoinRequest.newBuilder()
-                            .setRequestId(UUID.randomUUID().toString())
-                            .setName("Bot")
-                            .setMessage("I'm a bot!")
-                            .build();
-                        addJoinRequest(request);
-                    } else {
-                        Log.debugv("No bot needed for request: {0}", r.getRequestId());
-                    }
-                });
-        }
-        
-        public void addJoinRequest(JoinRequest request) {
-            joinRequests.onNext(request);
-        }
-
-        public Multi<JoinRequest> joinRequests() {
-            return joinRequests;
-        }
-
-        private Uni<JoinResponse> selectResponseFor(JoinRequest request) {
-            return joinResponses
-                .onItem().invoke(r -> Log.infov("Received a join response: {0}", r))
-                .select().where(response -> response.getRequestId().equals(request.getRequestId()))
-                .toUni();
-        }
-
-        public Uni<JoinResponse> createGameFor(JoinRequest request) {
-            return selectResponseFor(request)
-                .onSubscription().invoke(c -> addJoinRequest(request))
-                .onItem().invoke(c -> Log.infov("Fulfilled request: {0}", request));
+        public Multi<JoinResponse> makeBotMatchFor(JoinRequest request) {
+            return Multi.createFrom().items(
+                JoinResponse.newBuilder()
+                    .setMessage(request.getName() + " VS. " + "BOT")
+                    .build()
+            );
         }
 
     }
@@ -126,7 +82,7 @@ public class GameService implements TicTacToeGame {
     @Override
     public Uni<JoinResponse> joinGame(JoinRequest request) {
         var requestId = UUID.randomUUID().toString();
-        return gameManager.createGameFor(request.toBuilder().setRequestId(requestId).build());
+        return gameManager.makeMatchFor(request.toBuilder().setRequestId(requestId).build());
     }
 
     @Override
