@@ -131,6 +131,10 @@ public class GameService implements TicTacToeGame {
             Game game = new Game(id, null, state);
             activeGamesById.put(id, game);
             gameProcessorById.get(id).onNext(createGameUpdate(game));
+            if (state.isTerminal()) {
+                gameProcessorById.get(id).onComplete();
+                gameProcessorById.remove(id);
+            }
         }
 
         private GameUpdate createGameUpdate(Game game) {
@@ -157,7 +161,10 @@ public class GameService implements TicTacToeGame {
             state = state.setBoard(board.build());
             state = state.setCurrentPlayerIndex(s.currentPlayerIndex());
             if (s.isTerminal()) {
-                state.setWinningPlayerIndex(s.lastPlayerIndex());
+                state.setCompleted(true);
+                if (s.lastPlayerHasChain()) {
+                    state.setWinningPlayerIndex(s.lastPlayerIndex());
+                }
             }
             return state.build();
         }
