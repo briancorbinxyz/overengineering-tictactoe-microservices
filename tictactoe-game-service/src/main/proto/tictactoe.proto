@@ -62,7 +62,7 @@ message Player {
 // The game board
 message Board {
     int32 dimension = 1;
-    repeated int32 contents = 2;
+    repeated string contents = 2;
 }
 
 message BoardEntry {

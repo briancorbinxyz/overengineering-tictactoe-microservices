@@ -24,9 +24,9 @@ val useLocal: Boolean = project.findProperty("useLocal")?.toString()?.toBoolean(
 dependencies {
     // Game Dependencies
     if (useLocal) {
-        implementation(files("libs/tictactoe-api-1.2.1-jdk22.jar"))
+        implementation(files("libs/tictactoe-api-1.3.1-jdk22.jar"))
     } else {
-        implementation("org.xxdc.oss.example:tictactoe-api:1.2.1-jdk22")
+        implementation("org.xxdc.oss.example:tictactoe-api:1.3.1-jdk22")
     } 
     // Quarkus Dependencies
     implementation("io.quarkus:quarkus-grpc")

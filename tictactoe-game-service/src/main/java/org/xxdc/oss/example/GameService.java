@@ -144,26 +144,26 @@ public class GameService implements TicTacToeGame {
                 .build();
         }
 
-        private State createGameState(GameState s) {
+        private State createGameState(GameState gameState) {
             Builder state = org.xxdc.oss.example.service.State.newBuilder();
-            for (int i = 0; i < s.playerMarkers().size(); i++) {
-                state = state.addPlayers(Player.newBuilder().setMarker(s.playerMarkers().get(i))
+            for (int i = 0; i < gameState.playerMarkers().size(); i++) {
+                state = state.addPlayers(Player.newBuilder().setMarker(gameState.playerMarkers().get(i))
                   .setIndex(i)
                   .build());
             }
             var board = Board.newBuilder();
-            board.setDimension(s.board().dimension());
-            for (int i = 0; i < s.board().dimension() * s.board().dimension(); i++) {
+            board.setDimension(gameState.board().dimension());
+            for (int i = 0; i < gameState.board().dimension() * gameState.board().dimension(); i++) {
                 // TODO: we need to get the actual contents (we don't expose it in the GameBoard)
                 // may have to hack for now and get it from the json
-               board = board.addContents(-1);
+               board = board.addContents(gameState.board().content()[i] == null ? "" : gameState.board().content()[i]);
             }
             state = state.setBoard(board.build());
-            state = state.setCurrentPlayerIndex(s.currentPlayerIndex());
-            if (s.isTerminal()) {
+            state = state.setCurrentPlayerIndex(gameState.currentPlayerIndex());
+            if (gameState.isTerminal()) {
                 state.setCompleted(true);
-                if (s.lastPlayerHasChain()) {
-                    state.setWinningPlayerIndex(s.lastPlayerIndex());
+                if (gameState.lastPlayerHasChain()) {
+                    state.setWinningPlayerIndex(gameState.lastPlayerIndex());
                 }
             }
             return state.build();
