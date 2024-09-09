@@ -6,13 +6,29 @@ plugins {
 repositories {
     mavenCentral()
     mavenLocal()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/briancorbinxyz/overengineering-tictactoe")
+        credentials {
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
+            password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
 }
 
 val quarkusPlatformGroupId: String by project
 val quarkusPlatformArtifactId: String by project
 val quarkusPlatformVersion: String by project
 
+val useLocal: Boolean = project.findProperty("useLocal")?.toString()?.toBoolean() ?: true 
 dependencies {
+    // Game Dependencies
+    if (useLocal) {
+        implementation(files("libs/tictactoe-api-1.2.1-jdk22.jar"))
+    } else {
+        implementation("org.xxdc.oss.example:tictactoe-api:1.2.1-jdk22")
+    } 
+    // Quarkus Dependencies
     implementation("io.quarkus:quarkus-grpc")
     implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
     implementation("io.quarkus:quarkus-arc")
@@ -25,8 +41,8 @@ group = "org.xxdc.oss.example"
 version = "1.0.0-SNAPSHOT"
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_22
+    targetCompatibility = JavaVersion.VERSION_22
 }
 
 tasks.withType<Test> {

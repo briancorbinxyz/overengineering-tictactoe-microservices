@@ -11,11 +11,9 @@ package tictactoe;
 // The gaming service definition.
 service TicTacToeGame {
     // Sends a greeting
-    rpc JoinGame (JoinRequest) returns (JoinResponse) {
-    }
-
-    rpc MakeMove (GameMoveRequest) returns (GameUpdate) {
-    } 
+    rpc JoinGame (JoinRequest) returns (JoinResponse) {}
+    rpc MakeMove (GameMoveRequest) returns (GameMoveResponse) {} 
+    rpc Subscribe (SubscriptionRequest) returns (stream GameUpdate) {}
 }
 
 // The request message containing the user message
@@ -33,6 +31,10 @@ message JoinResponse {
     string message = 4;
 }
 
+message SubscriptionRequest {
+    string game_id = 1;
+}
+
 message GameUpdate {
     string game_id = 1;
     State state = 2;
@@ -42,6 +44,13 @@ message GameMoveRequest {
     string game_id = 1;
     Player player = 2;
     int32 move = 3;
+}
+
+message GameMoveResponse {
+    string game_id = 1;
+    Player player = 2;
+    int32 move = 3;
+    bool success = 4;
 }
 
 // The player
