@@ -3,12 +3,15 @@ package org.xxdc.oss.example;
 import org.xxdc.oss.example.service.TicTacToeGame;
 
 import java.time.Duration;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.xxdc.oss.example.*;
+import org.xxdc.oss.example.bot.BotStrategy;
 import org.xxdc.oss.example.service.GameMoveRequest;
 import org.xxdc.oss.example.service.GameMoveResponse;
 import org.xxdc.oss.example.service.GameUpdate;
@@ -37,26 +40,33 @@ public class GameService implements TicTacToeGame {
     // TODO: split the game-manager-service and the game-service
     static class GameManager {
 
+        static {
+            // Disable native game board
+            GameBoard.useNative.set(false);
+        }
+
         private final ConcurrentLinkedQueue<JoinRequest> requestQueue = new ConcurrentLinkedQueue<>();
 
-        private final ConcurrentHashMap<JoinRequest, UnicastProcessor<JoinResponse>> processorByRequest = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<JoinRequest, UnicastProcessor<JoinResponse>> unicasterByRequest = new ConcurrentHashMap<>();
 
         private final ConcurrentHashMap<String, Game> activeGamesById = new ConcurrentHashMap<>();
 
-        private final ConcurrentHashMap<String, BroadcastProcessor<GameUpdate>> gameProcessorById = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<String, BroadcastProcessor<GameUpdate>> gameBroadcasterById = new ConcurrentHashMap<>();
+
+        private final AtomicInteger gameIdCounter = new AtomicInteger();
 
         public Uni<JoinResponse> makeMatchFor(JoinRequest request) {
             Log.infov("Received a join request {0}", request);
             return Uni.createFrom().emitter(emitter -> {
-                var processor = UnicastProcessor.<JoinResponse>create();
                 if (requestQueue.isEmpty()) {
-                    Log.infov("Waiting for player for request {0}", request);
-                    processorByRequest.put(request, processor);
+                    Log.infov("Waiting for a match for request {0}", request);
+                    var unicaster = UnicastProcessor.<JoinResponse>create();
+                    unicasterByRequest.put(request, unicaster);
                     requestQueue.offer(request);
-                    processor.ifNoItem().after(Duration.ofSeconds(10)).recoverWithMulti(() -> {
+                    unicaster.ifNoItem().after(Duration.ofSeconds(10)).recoverWithMulti(() -> {
                         Log.infov("Creating a bot player for request {0}", request);
                         requestQueue.remove(request);
-                        processorByRequest.remove(request);
+                        unicasterByRequest.remove(request);
                         return makeBotMatchFor(request);
                     }).subscribe().with(
                         emitter::complete,
@@ -64,26 +74,22 @@ public class GameService implements TicTacToeGame {
                         () -> {}
                     );
                 } else {
-                    Log.infov("Found player for request {0}", request);
+                    Log.infov("Found a match for request {0}", request);
                     var otherRequest = requestQueue.poll();
 
-                    var gameId = "demo";
-                    var game = new Game(gameId, null, new GameState(GameBoard.withDimension(3), List.of("X", "O"), 0));
-                    activeGamesById.put(gameId, game);
-                    var gameProcessor = BroadcastProcessor.<GameUpdate>create();
-                    gameProcessorById.put(gameId, gameProcessor);
-
-                    // my response
-                    var gameUpdate = createGameUpdate(game);
+                    var game = createAndRegisterGame(request, otherRequest);
+                    var gameUpdate = buildGameUpdate(game);
                     var response = JoinResponse.newBuilder()
                         .setMessage(otherRequest.getName() + " VS. " + request.getName())
                         .setAssignedPlayer(Player.newBuilder()
                             .setMarker("O")
-                            .setIndex(0)
+                            .setIndex(1)
                             .build()
                         )
                         .setInitialUpdate(gameUpdate)
                         .build();
+
+                    // my response
                     emitter.complete(response);
 
                     // their response
@@ -91,23 +97,109 @@ public class GameService implements TicTacToeGame {
                         .setMessage(otherRequest.getName() + " VS. " + request.getName())
                         .setAssignedPlayer(Player.newBuilder()
                             .setMarker("X")
-                            .setIndex(1)
+                            .setIndex(0)
                             .build()
                         )
                         .setInitialUpdate(gameUpdate)
                         .build();
-                    var otherRequestProcessor = processorByRequest.remove(otherRequest);
-                    otherRequestProcessor.onNext(otherResponse);
-                    otherRequestProcessor.onComplete();
+                    var otherRequestUnicaster = unicasterByRequest.remove(otherRequest);
+                    otherRequestUnicaster.onNext(otherResponse);
+                    otherRequestUnicaster.onComplete();
                 }
             });
-        } 
+        }
 
         public Multi<JoinResponse> makeBotMatchFor(JoinRequest request) {
-            return Multi.createFrom().items(
-                JoinResponse.newBuilder()
-                    .setMessage(request.getName() + " VS. " + "BOT")
-                    .build()
+            var response = buildJoinResponse(request, createAndRegisterGame(request));
+            return Multi.createFrom().items(response).invoke(() -> {
+                String gameId = response.getInitialUpdate().getGameId();
+                Log.infov("Bot player joined the game {0}", gameId);
+                var gameUpdates = subscribeToGame(SubscriptionRequest.newBuilder().setGameId(gameId).build());
+                gameUpdates.onItem().invoke(
+                    gameUpdate -> {
+                        Log.infov("Received a game update {0}", gameUpdate);
+                        var gameState = fromServiceGameState(gameUpdate.getState());
+                        if (gameState.isTerminal()) {
+                            Log.infov("Game is over.");
+                        } else if (gameUpdate.getState().getCurrentPlayerIndex() == 1) {
+                            Log.infov("Making a move.");
+                            var bot = BotStrategy.MCTS;
+                            int move = bot.applyAsInt(gameState);
+                            makeMove(GameMoveRequest.newBuilder()
+                                .setGameId(gameId)
+                                .setPlayer(Player.newBuilder()
+                                    .setMarker("O")
+                                    .setIndex(1))
+                                .setMove(move)
+                                .build()
+                            ).subscribe().with(r -> {
+                                Log.infov("Move to {0} was {1}", move, r.getSuccess() ? "sucessful" : "a failure.");
+                            });
+                        } else {
+                            Log.infov("Waiting for human player to make a move.");
+                        }
+                    }).subscribe().with((u) -> {});
+            });
+        }
+
+        public Uni<GameMoveResponse> makeMove(GameMoveRequest request) {
+            Log.infov("Received a move request {0}", request);
+            var game = getActiveGame(request.getGameId());
+            if (game == null) {
+                return Uni.createFrom().failure(new RuntimeException("Game not found"));
+            }
+            return Uni.createFrom().item(buildGameMoveResponse(request)).onItem().invoke(() -> {
+                var state = game.state();
+                // TODO: validate the player and everything before making the move
+                Log.infov("Applying move request {0}", request);
+                var updatedGame = new Game(game.id(), state.afterPlayerMoves(request.getMove()));
+                activeGamesById.put(updatedGame.id(), updatedGame);
+
+                gameBroadcasterById.get(game.id()).onNext(buildGameUpdate(updatedGame));
+                if (state.isTerminal()) {
+                    activeGamesById.remove(game.id());
+                    var gameBroadcaster = gameBroadcasterById.remove(game.id());
+                    gameBroadcaster.onComplete();
+                }
+            });
+        }
+
+        private GameMoveResponse buildGameMoveResponse(GameMoveRequest request) {
+            return GameMoveResponse.newBuilder()
+                .setGameId(request.getGameId())
+                .setPlayer(request.getPlayer())
+                .setMove(request.getMove())
+                .setSuccess(true)
+                .build();
+        }
+
+        private Game createAndRegisterGame(JoinRequest ... requests) {
+            var gameIdBuilder = new StringBuilder();
+            gameIdBuilder.append(gameIdCounter.incrementAndGet());
+            for (JoinRequest r : requests) {
+                gameIdBuilder.append("-");
+                gameIdBuilder.append(r.getRequestId());
+            }
+            var gameId = Base64.getEncoder().encodeToString(gameIdBuilder.toString().getBytes());
+            var game = new Game(gameId, new GameState(GameBoard.withDimension(3), List.of("X", "O"), 0));
+            activeGamesById.put(gameId, game);
+            gameBroadcasterById.put(gameId, BroadcastProcessor.<GameUpdate>create());
+            return game;
+        } 
+
+        private GameState fromServiceGameState(State state) {
+            GameBoard board = GameBoard.withDimension(state.getBoard().getDimension());
+            for (int i = 0; i < state.getBoard().getDimension() * state.getBoard().getDimension(); i++) {
+                var m = state.getBoard().getContents(i);
+                if (m != null && !m.isEmpty()) {
+                    board = board.withMove(m, i);
+                }
+            }
+            return new GameState(
+                board,
+                state.getPlayersList().stream().map(p -> p.getMarker()).toList(),
+                state.getCurrentPlayerIndex(),
+                state.getPreviousMove()
             );
         }
 
@@ -115,51 +207,53 @@ public class GameService implements TicTacToeGame {
             return activeGamesById.get(gameId);
         }
 
-        public Multi<GameUpdate> subscribe(SubscriptionRequest request) {
+        public Multi<GameUpdate> subscribeToGame(SubscriptionRequest request) {
             var game = getActiveGame(request.getGameId());
             if (game == null) {
                 return Multi.createFrom().empty();
             }
-            var gameProcessor = gameProcessorById.get(game.id());
-            if (gameProcessor == null) {
+            var gameBroadcaster = gameBroadcasterById.get(game.id());
+            if (gameBroadcaster == null) {
                 return Multi.createFrom().empty();
             }
-            return gameProcessor.toHotStream();
+            return gameBroadcaster.toHotStream();
         }
 
-        public void updateGame(String id, GameState state) {
-            Game game = new Game(id, null, state);
-            activeGamesById.put(id, game);
-            gameProcessorById.get(id).onNext(createGameUpdate(game));
-            if (state.isTerminal()) {
-                gameProcessorById.get(id).onComplete();
-                gameProcessorById.remove(id);
-            }
-        }
-
-        private GameUpdate createGameUpdate(Game game) {
-            return GameUpdate.newBuilder()
-                .setGameId(game.id())
-                .setState(createGameState(game.state()))
+        private JoinResponse buildJoinResponse(JoinRequest request, Game game) {
+            return JoinResponse.newBuilder()
+                .setMessage(request.getName() + " VS. " + "BOT")
+                .setAssignedPlayer(Player.newBuilder()
+                    .setMarker("X")
+                    .setIndex(0)
+                    .build()
+                )
+                .setInitialUpdate(buildGameUpdate(game))
                 .build();
         }
 
-        private State createGameState(GameState gameState) {
+        private GameUpdate buildGameUpdate(Game game) {
+            return GameUpdate.newBuilder()
+                .setGameId(game.id())
+                .setState(buildGameState(game.state()))
+                .build();
+        }
+
+        private State buildGameState(GameState gameState) {
             Builder state = org.xxdc.oss.example.service.State.newBuilder();
             for (int i = 0; i < gameState.playerMarkers().size(); i++) {
-                state = state.addPlayers(Player.newBuilder().setMarker(gameState.playerMarkers().get(i))
-                  .setIndex(i)
-                  .build());
+                state = state.addPlayers(Player.newBuilder()
+                    .setMarker(gameState.playerMarkers().get(i))
+                    .setIndex(i)
+                    .build());
             }
             var board = Board.newBuilder();
             board.setDimension(gameState.board().dimension());
             for (int i = 0; i < gameState.board().dimension() * gameState.board().dimension(); i++) {
-                // TODO: we need to get the actual contents (we don't expose it in the GameBoard)
-                // may have to hack for now and get it from the json
-               board = board.addContents(gameState.board().content()[i] == null ? "" : gameState.board().content()[i]);
+                board = board.addContents(gameState.board().content()[i] == null ? "" : gameState.board().content()[i]);
             }
             state = state.setBoard(board.build());
             state = state.setCurrentPlayerIndex(gameState.currentPlayerIndex());
+            state = state.setPreviousMove(gameState.lastMove());
             if (gameState.isTerminal()) {
                 state.setCompleted(true);
                 if (gameState.lastPlayerHasChain()) {
@@ -171,8 +265,7 @@ public class GameService implements TicTacToeGame {
 
     }
 
-    static record Game(String id, List<PlayerNode> players, GameState state) {
-    }
+    static record Game(String id, GameState state) {}
 
     @Override
     public Uni<JoinResponse> joinGame(JoinRequest request) {
@@ -182,23 +275,7 @@ public class GameService implements TicTacToeGame {
 
     @Override
     public Uni<GameMoveResponse> makeMove(GameMoveRequest request) {
-        Log.infov("Received a move request {0}", request);
-        var game = gameManager.getActiveGame(request.getGameId());
-        if (game == null) {
-            return Uni.createFrom().failure(new RuntimeException("Game not found"));
-        }
-        Log.infov("Found a game for request {0}", request);
-        return Uni.createFrom().item(GameMoveResponse.newBuilder()
-            .setGameId(request.getGameId())
-            .setPlayer(request.getPlayer())
-            .setMove(request.getMove())
-            .setSuccess(true).build()
-        ).invoke(() -> {
-            var state = game.state();
-            // TODO: validate the player and everything before making the move
-            state = state.afterPlayerMoves(request.getMove());
-            gameManager.updateGame(game.id(), state);
-        });
+        return gameManager.makeMove(request);
     }
 
     @Override
@@ -208,6 +285,6 @@ public class GameService implements TicTacToeGame {
         if (game == null) {
             return Multi.createFrom().failure(new RuntimeException("Game not found"));
         }
-        return gameManager.subscribe(request);
+        return gameManager.subscribeToGame(request);
     }
 }

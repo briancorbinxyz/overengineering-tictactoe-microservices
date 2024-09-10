@@ -74,7 +74,7 @@ message State {
     Board board = 1;
     repeated Player players = 2;
     int32 current_player_index = 3;
-    int32 prev_move = 4;
+    optional int32 previous_move = 4;
     bool completed = 5;
     optional int32 winning_player_index = 6;
 }
