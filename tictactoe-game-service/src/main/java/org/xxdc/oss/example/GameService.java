@@ -115,30 +115,27 @@ public class GameService implements TicTacToeGame {
                 String gameId = response.getInitialUpdate().getGameId();
                 Log.infov("Bot player joined the game {0}", gameId);
                 var gameUpdates = subscribeToGame(SubscriptionRequest.newBuilder().setGameId(gameId).build());
-                gameUpdates.onItem().invoke(
-                    gameUpdate -> {
-                        Log.infov("Received a game update {0}", gameUpdate);
-                        var gameState = fromServiceGameState(gameUpdate.getState());
-                        if (gameState.isTerminal()) {
-                            Log.infov("Game is over.");
-                        } else if (gameUpdate.getState().getCurrentPlayerIndex() == 1) {
-                            Log.infov("Making a move.");
-                            var bot = BotStrategy.MCTS;
-                            int move = bot.applyAsInt(gameState);
-                            makeMove(GameMoveRequest.newBuilder()
-                                .setGameId(gameId)
-                                .setPlayer(Player.newBuilder()
-                                    .setMarker("O")
-                                    .setIndex(1))
-                                .setMove(move)
-                                .build()
-                            ).subscribe().with(r -> {
-                                Log.infov("Move to {0} was {1}", move, r.getSuccess() ? "sucessful" : "a failure.");
-                            });
-                        } else {
-                            Log.infov("Waiting for human player to make a move.");
-                        }
-                    }).subscribe().with((u) -> {});
+                gameUpdates.onItem().transformToMultiAndMerge(gameUpdate -> {
+                    Log.infov("Received a game update {0}", gameUpdate);
+                    var gameState = fromServiceGameState(gameUpdate.getState());
+                    if (gameState.isTerminal()) {
+                        Log.infov("Game is over.");
+                    } else if (gameUpdate.getState().getCurrentPlayerIndex() == 1) {
+                        Log.infov("Making a move.");
+                        var bot = BotStrategy.MCTS;
+                        int move = bot.applyAsInt(gameState);
+                        return makeMove(GameMoveRequest.newBuilder()
+                            .setGameId(gameId)
+                            .setPlayer(Player.newBuilder()
+                                .setMarker("O")
+                                .setIndex(1))
+                            .setMove(move)
+                            .build()).toMulti();
+                    } else {
+                        Log.infov("Waiting for human player to make a move.");
+                    }
+                    return Multi.createFrom().empty();
+                }).subscribe().with((r) -> { });
             });
         }
 
@@ -148,19 +145,25 @@ public class GameService implements TicTacToeGame {
             if (game == null) {
                 return Uni.createFrom().failure(new RuntimeException("Game not found"));
             }
-            return Uni.createFrom().item(buildGameMoveResponse(request)).onItem().invoke(() -> {
-                var state = game.state();
-                // TODO: validate the player and everything before making the move
-                Log.infov("Applying move request {0}", request);
-                var updatedGame = new Game(game.id(), state.afterPlayerMoves(request.getMove()));
-                activeGamesById.put(updatedGame.id(), updatedGame);
+            return Uni.createFrom().item(request)
+                .onItem().transform(r -> {
+                    var state = game.state();
+                    // TODO: validate the player and everything before making the move
+                    Log.infov("Applying move request {0}", request);
+                    var updatedGameState = state.afterPlayerMoves(request.getMove());
+                    var updatedGame = game.with(updatedGameState);
+                    activeGamesById.put(game.id(), updatedGame);
 
-                gameBroadcasterById.get(game.id()).onNext(buildGameUpdate(updatedGame));
-                if (state.isTerminal()) {
-                    activeGamesById.remove(game.id());
-                    var gameBroadcaster = gameBroadcasterById.remove(game.id());
-                    gameBroadcaster.onComplete();
-                }
+                    // broadcast the game update
+                    Log.infov("Broadcasting game update {0}", updatedGame);
+                    gameBroadcasterById.get(game.id()).onNext(buildGameUpdate(updatedGame));
+                    if (updatedGameState.isTerminal()) {
+                        activeGamesById.remove(game.id());
+                        Log.infov("Broadcasting game end {0}", updatedGame);
+                        var gameBroadcaster = gameBroadcasterById.remove(game.id());
+                        gameBroadcaster.onComplete();
+                    }
+                    return buildGameMoveResponse(r);
             });
         }
 
@@ -265,7 +268,11 @@ public class GameService implements TicTacToeGame {
 
     }
 
-    static record Game(String id, GameState state) {}
+    static record Game(String id, GameState state) {
+        public Game with(GameState state) {
+            return new Game(id, state);
+        }
+    }
 
     @Override
     public Uni<JoinResponse> joinGame(JoinRequest request) {
