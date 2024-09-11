@@ -24,16 +24,21 @@ import org.xxdc.oss.example.service.State.Builder;
 import org.xxdc.oss.example.service.SubscriptionRequest;
 import org.xxdc.oss.example.service.Board;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import io.smallrye.mutiny.operators.multi.processors.UnicastProcessor;
+import jakarta.inject.Inject;
 // https://quarkus.io/guides/logging
 import io.quarkus.logging.Log;
 
 @GrpcService
 public class GameService implements TicTacToeGame {
+
+    @Inject
+    private MeterRegistry registry;
 
     private final GameManager gameManager = new GameManager();
 
