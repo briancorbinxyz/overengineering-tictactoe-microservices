@@ -22,20 +22,22 @@ val quarkusPlatformVersion: String by project
 
 val useLocal: Boolean = project.findProperty("useLocal")?.toString()?.toBoolean() ?: true 
 dependencies {
+    implementation("io.quarkus:quarkus-smallrye-health")
     implementation("io.quarkus:quarkus-micrometer-registry-prometheus")
-    // Game Dependencies
-    if (useLocal) {
-        implementation(files("libs/tictactoe-api-1.3.1-jdk22.jar"))
-    } else {
-        implementation("org.xxdc.oss.example:tictactoe-api:1.3.1-jdk22")
-    } 
-    // Quarkus Dependencies
     implementation("io.quarkus:quarkus-grpc")
     implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
     implementation("io.quarkus:quarkus-arc")
     implementation("io.quarkus:quarkus-rest")
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
+    //
+    // Project Dependencies
+    //
+    if (useLocal) {
+        implementation(files("libs/tictactoe-api-1.3.1-jdk22.jar"))
+    } else {
+        implementation("org.xxdc.oss.example:tictactoe-api:1.3.1-jdk22")
+    } 
 }
 
 group = "org.xxdc.oss.example"

@@ -3,7 +3,6 @@ package org.xxdc.oss.example;
 import org.xxdc.oss.example.service.TicTacToeGame;
 import org.xxdc.oss.example.service.JoinRequest;
 import org.xxdc.oss.example.service.GameMoveRequest;
-import org.xxdc.oss.example.service.GameUpdate;
 import org.xxdc.oss.example.service.SubscriptionRequest;
 
 import io.quarkus.grpc.GrpcClient;
