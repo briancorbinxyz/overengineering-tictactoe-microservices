@@ -1,3 +1,5 @@
+import type { Game } from "~/models/game";
+
 const GameBoard = ({ game }: Game) => {
   const { dimension, contents } = game.board;
 
@@ -13,7 +15,10 @@ const GameBoard = ({ game }: Game) => {
       {rows.map((row, rowIndex) => (
         <div className="flex flex-row gap-1" key={rowIndex}>
           {row.map((marker, markerIndex) => (
-            <div className="flex rounded-md h-9 w-9 items-center justify-center border text-3xl dark:border-gray-50" key={markerIndex}>
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-md border text-3xl dark:border-gray-50"
+              key={markerIndex}
+            >
               {marker}
             </div>
           ))}
