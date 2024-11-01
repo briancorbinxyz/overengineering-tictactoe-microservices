@@ -1,11 +1,4 @@
-const game = {
-  board: {
-    dimension: 3,
-    contents: ["X", "O", "X", "", "", "", "", "", ""],
-  },
-};
-
-const GameBoard = () => {
+const GameBoard = ({ game }: Game) => {
   const { dimension, contents } = game.board;
 
   // Break the contents array into rows based on the board's dimension
