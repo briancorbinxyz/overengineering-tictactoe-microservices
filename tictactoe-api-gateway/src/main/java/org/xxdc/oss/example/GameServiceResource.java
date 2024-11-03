@@ -19,16 +19,20 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.Produces;
 
 import jakarta.inject.Inject;
-import jakarta.enterprise.context.ApplicationScoped;
 
-@Path("/game")
+@Path("/games")
 public class GameServiceResource {
 
     @GrpcClient
     TicTacToeGame game;
 
-    @Inject
-    JsonFormat.Printer jsonPrinter;
+    @Produces
+    public JsonFormat.Printer jsonPrinter() {
+        return JsonFormat.printer()
+            .includingDefaultValueFields()
+            .preservingProtoFieldNames()
+            .omittingInsignificantWhitespace();
+    }
 
     @GET
     @Path("/join")
@@ -42,6 +46,10 @@ public class GameServiceResource {
             .log("Game.Joiner")
             .onItem().transform(response -> {
                 try {
+                    var jsonPrinter = JsonFormat.printer()
+                        .includingDefaultValueFields()
+                        .preservingProtoFieldNames()
+                        .omittingInsignificantWhitespace();
                     return jsonPrinter.print(response);
                 } catch (Exception e) {
                 e.printStackTrace();
@@ -76,21 +84,10 @@ public class GameServiceResource {
 
     @GET
     @Path("{id}/subscribe")
+    @Produces(MediaType.SERVER_SENT_EVENTS)
     public Multi<String> subscribe(@PathParam("id") String gameId) {
         return game.subscribe(SubscriptionRequest.newBuilder()
             .setGameId(gameId)
             .build()).onItem().transform(r -> r.toString());
-    }
-}
-
-@ApplicationScoped
-class ProtobufConfig {
-    
-    @Produces
-    public JsonFormat.Printer jsonPrinter() {
-        return JsonFormat.printer()
-            .includingDefaultValueFields()
-            .preservingProtoFieldNames()
-            .omittingInsignificantWhitespace();
     }
 }

@@ -11,22 +11,28 @@ import { useEffect, useState } from "react";
 // Remix Route: loader
 export const loader = async ({ request }: ActionFunctionArgs) => await startGame();
 
+const subscribeToGame = (gameId: string) => {
+  const eventSource = new EventSource(`http://localhost:9010/games/${gameId}/subscribe`);
+  console.info("Subscribing to game:", gameId)
+  return eventSource;
+};
+
 // =============================================================================
 // View
 // =============================================================================
 
 export default function Index() {
   // Read
-  // - Join
-  const newGame = useLoaderData<typeof loader>();
-  // - Subscribe
+  // - Join the game
+  const {initial_update, assigned_player, message} = useLoaderData<typeof loader>();
+  // - Subscribe to the game events
   const [gameEvent, setGameEvent] = useState(null);
 
   useEffect(() => {
-    const eventSource = new EventSource(`http://localhost:9010/${newGame.initialUpdate.gameId}/subscribe`);
+    const eventSource = subscribeToGame(initial_update.game_id);
 
     eventSource.onmessage = (event) => {
-      console.log(event.data);
+      console.log("Data:", event.data);
       setGameEvent(event.data);
     };
 
@@ -44,7 +50,7 @@ export default function Index() {
   // Render
   return (
     <main className="border-gray-50">
-      <GameBoard game={newGame.initialUpdate} />
+      <GameBoard game={initial_update.state} />
       {gameEvent}
     </main>
   );
