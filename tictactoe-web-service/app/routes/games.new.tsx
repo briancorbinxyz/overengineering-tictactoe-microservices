@@ -12,8 +12,8 @@ import { useEffect, useState } from "react";
 export const loader = async ({ request }: ActionFunctionArgs) => await startGame();
 
 const subscribeToGame = (gameId: string) => {
-  const eventSource = new EventSource(`http://localhost:9010/games/${gameId}/subscribe`);
   console.info("Subscribing to game:", gameId)
+  const eventSource = new EventSource(`http://localhost:9010/games/${gameId}/subscribe`);
   return eventSource;
 };
 
