@@ -17,7 +17,7 @@ export default function Index() {
 
   // Render
   return (
-    <main className="grid border-gray-50">
+    <main className="border-gray-50">
       <GameBoard game={initialGame} />
     </main>
   );

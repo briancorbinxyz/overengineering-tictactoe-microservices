@@ -2,8 +2,11 @@ package org.xxdc.oss.example;
 
 import org.xxdc.oss.example.service.TicTacToeGame;
 import org.xxdc.oss.example.service.JoinRequest;
+import org.xxdc.oss.example.service.JoinResponse;
 import org.xxdc.oss.example.service.GameMoveRequest;
 import org.xxdc.oss.example.service.SubscriptionRequest;
+
+import com.google.protobuf.util.JsonFormat;
 
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Multi;
@@ -12,6 +15,11 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.Produces;
+
+import jakarta.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @Path("/game")
 public class GameServiceResource {
@@ -19,8 +27,12 @@ public class GameServiceResource {
     @GrpcClient
     TicTacToeGame game;
 
+    @Inject
+    JsonFormat.Printer jsonPrinter;
+
     @GET
     @Path("/join")
+    @Produces(MediaType.APPLICATION_JSON)
     public Uni<String> join() {
         return game.joinGame(JoinRequest.newBuilder()
                 .setMessage("Can I join?")
@@ -28,7 +40,14 @@ public class GameServiceResource {
                 .build()
             )
             .log("Game.Joiner")
-            .onItem().transform(response -> response.getMessage());
+            .onItem().transform(response -> {
+                try {
+                    return jsonPrinter.print(response);
+                } catch (Exception e) {
+                e.printStackTrace();
+                return "{}";
+            }}
+        );
     }
 
     @GET
@@ -61,5 +80,17 @@ public class GameServiceResource {
         return game.subscribe(SubscriptionRequest.newBuilder()
             .setGameId(gameId)
             .build()).onItem().transform(r -> r.toString());
+    }
+}
+
+@ApplicationScoped
+class ProtobufConfig {
+    
+    @Produces
+    public JsonFormat.Printer jsonPrinter() {
+        return JsonFormat.printer()
+            .includingDefaultValueFields()
+            .preservingProtoFieldNames()
+            .omittingInsignificantWhitespace();
     }
 }
