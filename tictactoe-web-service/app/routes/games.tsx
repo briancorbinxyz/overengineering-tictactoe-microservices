@@ -19,7 +19,9 @@ export const meta: MetaFunction = () => {
 
 // Remix Route: Action
 export const action = async ({ request }: ActionFunctionArgs) => {
-  return redirect("/games/new");
+  const startResponse = await startGame();
+  console.log("Got Response", startResponse);
+  return redirect(`${(await startResponse.json()).initial_update.game_id}`)
 };
 
 // =============================================================================

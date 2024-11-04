@@ -1,8 +1,4 @@
-import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
-import { Form } from "@remix-run/react";
-import { startGame } from "~/models/game.server";
-import { redirect } from "@remix-run/node"
-import { Outlet, Link } from "@remix-run/react";
+import { Link } from "@remix-run/react";
 
 // =============================================================================
 // Controller
@@ -25,7 +21,7 @@ export default function Index() {
           <h1>Over-Engineering Tic-Tac-Toe</h1>
         </header>
         <nav className="flex flex-col items-center justify-center gap-1 rounded-3xl border border-gray-200 p-6 dark:border-gray-700">
-          <Link to="games"className="my-2 flex flex-col gap-2"></Link>
+          <Link to="games" className="my-2 flex flex-col gap-2"></Link>
         </nav>
       </div>
     </div>

@@ -84,6 +84,9 @@ public class GameService implements TicTacToeGame {
 
                     var game = createAndRegisterGame(request, otherRequest);
                     var gameUpdate = buildGameUpdate(game);
+                    // Publish initial update
+                    var gameBroadcaster = gameBroadcasterById.get(game.id());
+                    
                     var response = JoinResponse.newBuilder()
                         .setMessage(otherRequest.getName() + " VS. " + request.getName())
                         .setAssignedPlayer(Player.newBuilder()

@@ -3,12 +3,16 @@ package org.xxdc.oss.example;
 import org.xxdc.oss.example.service.TicTacToeGame;
 import org.xxdc.oss.example.service.JoinRequest;
 import org.xxdc.oss.example.service.JoinResponse;
+import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.xxdc.oss.example.service.GameMoveRequest;
 import org.xxdc.oss.example.service.SubscriptionRequest;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.MessageOrBuilder;
 import com.google.protobuf.util.JsonFormat;
 
 import io.quarkus.grpc.GrpcClient;
+import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.ws.rs.GET;
@@ -26,13 +30,8 @@ public class GameServiceResource {
     @GrpcClient
     TicTacToeGame game;
 
-    @Produces
-    public JsonFormat.Printer jsonPrinter() {
-        return JsonFormat.printer()
-            .includingDefaultValueFields()
-            .preservingProtoFieldNames()
-            .omittingInsignificantWhitespace();
-    }
+    @Inject
+    JsonFormat.Printer json;
 
     @GET
     @Path("/join")
@@ -44,22 +43,12 @@ public class GameServiceResource {
                 .build()
             )
             .log("Game.Joiner")
-            .onItem().transform(response -> {
-                try {
-                    var jsonPrinter = JsonFormat.printer()
-                        .includingDefaultValueFields()
-                        .preservingProtoFieldNames()
-                        .omittingInsignificantWhitespace();
-                    return jsonPrinter.print(response);
-                } catch (Exception e) {
-                e.printStackTrace();
-                return "{}";
-            }}
-        );
+            .onItem().transform(this::asJson);
     }
 
     @GET
     @Path("/joinAndSubscribe")
+    @RestStreamElementType(MediaType.APPLICATION_JSON)
     public Multi<String> joinAndSubscribe() {
         return game.joinGame(JoinRequest.newBuilder()
                 .setMessage("Can I join?")
@@ -70,7 +59,7 @@ public class GameServiceResource {
             .onItem().transformToMulti(response -> game.subscribe(SubscriptionRequest.newBuilder()
                 .setGameId(response.getInitialUpdate().getGameId())
                 .build()))
-            .onItem().transform(r -> r.toString());
+            .onItem().transform(this::asJson);
     }
 
     @GET
@@ -79,15 +68,26 @@ public class GameServiceResource {
         return game.makeMove(GameMoveRequest.newBuilder()
             .setGameId(gameId)
             .setMove(location)
-            .build()).onItem().transform(r -> r.toString());
+            .build())
+            .onItem().transform(this::asJson);
     }
 
     @GET
     @Path("{id}/subscribe")
-    @Produces(MediaType.SERVER_SENT_EVENTS)
+    @RestStreamElementType(MediaType.APPLICATION_JSON)
     public Multi<String> subscribe(@PathParam("id") String gameId) {
         return game.subscribe(SubscriptionRequest.newBuilder()
             .setGameId(gameId)
-            .build()).onItem().transform(r -> r.toString());
+            .build())
+            .onItem().transform(this::asJson);
+    }
+
+    public String asJson(MessageOrBuilder proto) {
+        try {
+            return json.print(proto);
+        } catch (InvalidProtocolBufferException e) {
+            Log.error("Failed to convert proto to json.", e);
+            throw new RuntimeException("Invalid object during JSON conversion", e);
+        }
     }
 }

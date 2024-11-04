@@ -1,6 +1,3 @@
-import type { ActionFunctionArgs, MetaFunction } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
-import { startGame } from "~/models/game.server";
 import GameBoard from "~/components/gameboard";
 import { initialGame } from "~/models/game";
 
