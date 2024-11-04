@@ -36,7 +36,7 @@ export default function Game() {
 
     eventSource.onmessage = (event) => {
       console.log("Data:", event.data);
-      //setGameEvent(json(event.data));
+      setGameEvent(JSON.parse(event.data).state);
     };
 
     eventSource.onerror = (error) => {
