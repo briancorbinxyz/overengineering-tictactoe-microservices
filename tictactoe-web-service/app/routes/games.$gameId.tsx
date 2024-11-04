@@ -2,7 +2,7 @@ import type { LoaderFunctionArgs } from "@remix-run/node";
 import GameBoard from "~/components/gameboard";
 import { useLoaderData } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import { initialGame } from "~/models/game";
+import { initialGameState } from "~/models/game";
 import { json } from "@remix-run/node";
 import invariant from "tiny-invariant" 
 
@@ -27,9 +27,9 @@ export default function Game() {
   // Read
   // - Game ID 
   const gameId = useLoaderData<typeof loader>();
-  invariant(gameId, "Valid Game ID is required");
+  invariant(gameId, "A valid game id is required");
   // - Subscribe to the game events
-  const [gameEvent, setGameEvent] = useState(initialGame);
+  const [gameEvent, setGameEvent] = useState(initialGameState.state);
 
   useEffect(() => {
     const eventSource = subscribeToGame(gameId);
@@ -53,7 +53,7 @@ export default function Game() {
   // Render
   return (
     <main className="border-gray-50">
-      <GameBoard game={gameEvent} />
+      <GameBoard state={gameEvent} game_id={gameId}/>
     </main>
   );
 }

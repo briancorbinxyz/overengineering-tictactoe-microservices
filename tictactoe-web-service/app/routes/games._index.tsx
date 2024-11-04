@@ -1,5 +1,5 @@
 import GameBoard from "~/components/gameboard";
-import { initialGame } from "~/models/game";
+import { initialGameState } from "~/models/game";
 
 // =============================================================================
 // Controller
@@ -11,11 +11,12 @@ import { initialGame } from "~/models/game";
 
 export default function Index() {
   // Read
+  const {state, game_id} = initialGameState;
 
   // Render
   return (
     <main className="border-gray-50">
-      <GameBoard game={initialGame} />
+      <GameBoard state={state} game_id={game_id} />
     </main>
   );
 }
