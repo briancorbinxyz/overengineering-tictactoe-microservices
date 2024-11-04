@@ -66,6 +66,7 @@ public class GameService implements TicTacToeGame {
          * Map of games x notifier (broadcaster)
          */
         private final ConcurrentHashMap<String, BroadcastProcessor<GameUpdate>> gameBroadcasterById = new ConcurrentHashMap<>();
+        private final ConcurrentHashMap<String, Multi<GameUpdate>> gameUpdatesById = new ConcurrentHashMap<>();
 
         /**
          * Game id number generator
