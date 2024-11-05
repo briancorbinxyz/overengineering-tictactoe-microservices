@@ -1,4 +1,4 @@
-import { Outlet } from "@remix-run/react";
+import { Outlet, useNavigation } from "@remix-run/react";
 import { Form } from "@remix-run/react";
 import { MetaFunction } from "@remix-run/react";
 import { ActionFunctionArgs } from "@remix-run/node";
@@ -32,6 +32,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 const Game = () => {
   // Read 
+  const navigation = useNavigation();
+  const isIdle = Boolean(navigation.state === "idle");
 
   // Render
   return (
@@ -52,8 +54,8 @@ const Game = () => {
                 placeholder="Steve"
                 className="text-center"
               />
-              <button className="rounded border-gray-50" type="submit">
-                Join Game
+              <button className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-red-500" type="submit" disabled={!isIdle}>
+                {isIdle ? "Join Game" : "Joining Game..."}
               </button>
             </div>
           </Form>

@@ -81,7 +81,7 @@ public class GameService implements TicTacToeGame {
                     var unicaster = UnicastProcessor.<JoinResponse>create();
                     unicasterByRequest.put(request, unicaster);
                     requestQueue.offer(request);
-                    unicaster.ifNoItem().after(Duration.ofSeconds(10)).recoverWithMulti(() -> {
+                    unicaster.ifNoItem().after(Duration.ofSeconds(5)).recoverWithMulti(() -> {
                         Log.infov("Creating a bot player for request {0}", request);
                         requestQueue.remove(request);
                         unicasterByRequest.remove(request);
@@ -97,8 +97,6 @@ public class GameService implements TicTacToeGame {
 
                     var game = createAndRegisterGame(request, otherRequest);
                     var gameUpdate = buildGameUpdate(game);
-                    // Publish initial update
-                    var gameBroadcaster = gameBroadcasterById.get(game.id());
 
                     var response = JoinResponse.newBuilder()
                             .setMessage(otherRequest.getName() + " VS. " + request.getName())
@@ -249,7 +247,11 @@ public class GameService implements TicTacToeGame {
             if (gameUpdates == null) {
                 return Multi.createFrom().empty();
             }
-            return gameUpdates;
+            // Post the current state of the world before future states
+            // TODO: add a republished flag so it can ignore if it already has it
+            // and maybe versioning
+            return Multi.createBy().concatenating()
+                .streams(Multi.createFrom().item(buildGameUpdate(game)), gameUpdates);
         }
 
         private JoinResponse buildJoinResponse(JoinRequest request, Game game) {
