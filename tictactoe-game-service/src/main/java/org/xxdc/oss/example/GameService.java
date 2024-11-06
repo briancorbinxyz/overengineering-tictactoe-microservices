@@ -141,7 +141,7 @@ public class GameService implements TicTacToeGame {
                         } else if (gameUpdate.getState().getCurrentPlayerIndex() == 1) {
                             // TODO: remove the hardcoding
                             Log.infov("Making a move.");
-                            var bot = BotStrategy.MCTS;
+                            var bot = BotStrategy.MINIMAX;
                             int move = bot.applyAsInt(gameState);
                             makeMove(GameMoveRequest.newBuilder()
                                     .setGameId(gameId)

@@ -4,6 +4,7 @@ import { MetaFunction } from "@remix-run/react";
 import { ActionFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { startGame } from "~/models/game.server";
+import { motion } from "framer-motion"
 
 // =============================================================================
 // Controller
@@ -54,9 +55,9 @@ const Game = () => {
                 placeholder="Steve"
                 className="text-center"
               />
-              <button className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-red-500" type="submit" disabled={!isIdle}>
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-red-500" type="submit" disabled={!isIdle}>
                 {isIdle ? "Join Game" : "Joining Game..."}
-              </button>
+              </motion.button>
             </div>
           </Form>
         </nav>

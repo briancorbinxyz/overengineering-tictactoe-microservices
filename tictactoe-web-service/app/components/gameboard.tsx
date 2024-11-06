@@ -1,6 +1,7 @@
 import invariant from "tiny-invariant";
 import type { GameState } from "~/models/game";
-import { makeMove } from "~/services/game.api"
+import { makeMove } from "~/services/game.api";
+import { motion } from "framer-motion";
 
 const GameBoard = ({state, game_id}: GameState) => {
   const { dimension, contents } = state.board;
@@ -30,14 +31,14 @@ const GameBoard = ({state, game_id}: GameState) => {
       {rows.map((row, rowIndex) => (
         <div className="flex flex-row gap-1" key={rowIndex}>
           {row.map((marker, markerIndex) => (
-            <div
+            <motion.button whileHover={{scale: 1.15}}
               className="flex h-9 w-9 items-center justify-center rounded-md border text-3xl dark:border-gray-50"
               key={markerIndex}
               onClick={handleClick}
               id={String(rowIndex * dimension + markerIndex)}
             >
               {marker}
-            </div>
+            </motion.button>
           ))}
         </div>
       ))}
