@@ -40,8 +40,9 @@ const Game = () => {
   return (
     <div className="flex h-screen items-center justify-center">
       <div className="flex flex-col items-center gap-2">
-        <header className="flex flex-col items-center gap-2">
-          <h1>Over-Engineering Tic-Tac-Toe</h1>
+        <header className="flex flex-col items-center gap-9">
+          <h1 className="font-['Bleach'] text-8xl">Over-Engineering</h1>
+          <h1 className="font-['Bleach'] text-8xl rotate-90 float-right">Tic-Tac-Toe</h1>
         </header>
         <nav>
           <main className="flex flex-col items-center justify-center gap-1 rounded-3xl border border-gray-200 p-2 dark:border-gray-700">
@@ -55,7 +56,7 @@ const Game = () => {
                 placeholder="Steve"
                 className="text-center"
               />
-              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-red-500" type="submit" disabled={!isIdle}>
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-red-500" type="submit" disabled={!isIdle}>
                 {isIdle ? "Join Game" : "Joining Game..."}
               </motion.button>
             </div>
