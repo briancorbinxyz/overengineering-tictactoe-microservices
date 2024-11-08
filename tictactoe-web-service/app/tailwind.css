@@ -13,10 +13,18 @@ body {
 
 @layer base {
   @font-face {
-    font-family: 'Bleach';
+    font-family: "Bleach";
     font-style: normal;
     font-weight: 400;
     font-display: swap;
-    src: url(fonts/BleachRegular.woff2) format('woff2');
+    src: url(fonts/BleachRegular.woff2) format("woff2");
+  }
+
+  @font-face {
+    font-family: "Strong Young";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(fonts/StrongYoung.woff2) format("woff2");
   }
 }

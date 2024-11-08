@@ -1,22 +1,21 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import GameBoard from "~/components/gameboard";
 import { useLoaderData } from "@remix-run/react";
 import { useEffect, useState } from "react";
+import invariant from "tiny-invariant";
+import GameBoard from "~/components/gameboard";
 import { initialGameState } from "~/models/game";
-import { json } from "@remix-run/node";
-import invariant from "tiny-invariant" 
 
 // =============================================================================
 // Controller
 // =============================================================================
 
 // Remix Route: loader
-export const loader = ({ params }: LoaderFunctionArgs) => { 
+export const loader = ({ params }: LoaderFunctionArgs) => {
   return params.gameId;
-}
+};
 
 const subscribeToGame = (gameId: string) => {
-  console.info("Subscribing to game:", gameId)
+  console.info("Subscribing to game:", gameId);
   return new EventSource(`http://localhost:9010/games/${gameId}/subscribe`);
 };
 // =============================================================================
@@ -25,7 +24,7 @@ const subscribeToGame = (gameId: string) => {
 
 export default function Game() {
   // Read
-  // - Game ID 
+  // - Game ID
   const gameId = useLoaderData<typeof loader>();
   invariant(gameId, "A valid game id is required");
   // - Subscribe to the game events
@@ -40,7 +39,7 @@ export default function Game() {
     };
 
     eventSource.onerror = (error) => {
-      console.error('Error:', error);
+      console.error("Error:", error);
       eventSource.close();
     };
 
@@ -49,11 +48,10 @@ export default function Game() {
     };
   }, []);
 
-
   // Render
   return (
     <main className="border-gray-50">
-      <GameBoard state={gameEvent} game_id={gameId}/>
+      <GameBoard state={gameEvent} game_id={gameId} />
     </main>
   );
 }

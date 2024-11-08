@@ -4,7 +4,7 @@
 
 // Game State
 export type GameState = {
-  game_id: string | null,
+  game_id: string | null;
   state: {
     board: {
       dimension: number;
@@ -20,5 +20,5 @@ export const initialGameState: GameState = {
       dimension: 3,
       contents: ["", "", "", "", "", "", "", "", ""],
     },
-  }
+  },
 };

@@ -11,7 +11,7 @@ import { initialGameState } from "~/models/game";
 
 export default function Index() {
   // Read
-  const {state, game_id} = initialGameState;
+  const { state, game_id } = initialGameState;
 
   // Render
   return (
