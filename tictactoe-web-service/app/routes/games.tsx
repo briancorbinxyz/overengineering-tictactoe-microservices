@@ -5,6 +5,7 @@ import { useState } from "react";
 import Toast from "~/components/toast";
 import { startGame } from "~/models/game.server";
 import { SessionStorage } from "@remix-run/node";
+import { commitSession, getSession } from "~/sessions";
 
 // =============================================================================
 // Controller
@@ -24,7 +25,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const startResponse = await startGame();
   const startResponseJson = await startResponse.json();
   console.info("Joined game", startResponseJson.initial_update.game_id);
-  return redirect(`${startResponseJson.initial_update.game_id}`);
+  
+  // set the cookie
+  const session = await getSession(request.headers.get("Cookie"));
+  session.set("playerId", startResponseJson.assigned_player);
+  session.set("gameId", startResponseJson.initial_update.game_id);
+  return redirect(`${startResponseJson.initial_update.game_id}`, { headers: {
+    "Set-Cookie": await commitSession(session)
+  },
+  });
 };
 
 // =============================================================================
