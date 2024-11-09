@@ -31,6 +31,7 @@ export default function Game() {
   const [gameEvent, setGameEvent] = useState(initialGameState.state);
 
   useEffect(() => {
+    window.sessionStorage.setItem("activeGameId", gameId);
     const eventSource = subscribeToGame(gameId);
 
     eventSource.onmessage = (event) => {
