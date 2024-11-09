@@ -12,6 +12,8 @@ export type GameState = {
     };
     current_player_index: number;
     players: GamePlayer[];
+    completed: boolean;
+    winning_player_index: number | undefined;
   };
 };
 
@@ -30,6 +32,8 @@ export const initialGameState: GameState = {
     current_player_index: 0,
     players: [
       { index: 0, marker: "X" } , { index: 1, marker: "O" } 
-    ]
+    ],
+    completed: false,
+    winning_player_index: undefined,
   },
 };

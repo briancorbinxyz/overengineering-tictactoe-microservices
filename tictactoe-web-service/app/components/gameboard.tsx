@@ -22,7 +22,7 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
     );
 
     // Only allow the active player to make a move
-    if (gameId && activePlayerId) {
+    if (gameId && activePlayerId && !state.completed) {
       if (state.current_player_index == activePlayerId.index) {
         console.log("Move selected", locationId);
         await makeMove(gameId, locationId, activePlayerId?.marker);
@@ -32,6 +32,18 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
       }
     } else {
       console.debug("Clicked", locationId);
+    }
+  };
+
+  const gameStatus = () => {
+    if (state.completed) {
+      if (state.winning_player_index !== undefined) {
+        return `Player ${state.players[state.winning_player_index].marker} wins!`;
+      } else {
+        return "It's a draw!";
+      }
+    } else {
+      return `Turn: ${state.players[state.current_player_index].marker}`;
     }
   };
 
@@ -57,7 +69,7 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
           </div>
         ))}
       </div>
-      <div className="flex justify-center font-['Strong_Young'] text-black">{gameId ? 'Turn: ' + state.players[state.current_player_index].marker : ''}</div>
+      <div className="flex justify-center font-['Strong_Young'] text-black">{gameId ? gameStatus() : ''}</div>
     </div>
   );
 };
