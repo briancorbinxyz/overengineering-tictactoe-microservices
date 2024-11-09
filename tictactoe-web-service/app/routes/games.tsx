@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import Toast from "~/components/toast";
 import { startGame } from "~/models/game.server";
-import { SessionStorage } from "@remix-run/node";
 import { commitSession, getSession } from "~/sessions";
 
 // =============================================================================
@@ -25,14 +24,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const startResponse = await startGame();
   const startResponseJson = await startResponse.json();
   console.info("Joined game", startResponseJson.initial_update.game_id);
-  
+
   // set the cookie
   const session = await getSession(request.headers.get("Cookie"));
   session.set("playerId", startResponseJson.assigned_player);
   session.set("gameId", startResponseJson.initial_update.game_id);
-  return redirect(`${startResponseJson.initial_update.game_id}`, { headers: {
-    "Set-Cookie": await commitSession(session)
-  },
+  return redirect(`${startResponseJson.initial_update.game_id}`, {
+    headers: {
+      "Set-Cookie": await commitSession(session),
+    },
   });
 };
 
@@ -99,9 +99,9 @@ const Game = () => {
                 </motion.button>
               </div>
             </Form>
-          <footer className="hidden flex mb-auto">
-            <Toast message="Error - unable connect to game api gateway."></Toast>
-          </footer>
+            <footer className="mb-auto flex hidden">
+              <Toast message="Error - unable connect to game api gateway."></Toast>
+            </footer>
           </div>
           <div className="my-5 flex flex-col justify-start text-left">
             <h1

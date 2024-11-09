@@ -55,7 +55,7 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
             {row.map((marker, markerIndex) => (
               <motion.button
                 whileHover={{ scale: 1.15 }}
-                className={`flex h-14 w-14 ${marker === activePlayerId?.marker ? 'text-blue-900' : ''} items-center justify-center border-opacity-45 bg-yellow-700 bg-opacity-20 font-['Strong_Young'] text-6xl dark:border-gray-50`}
+                className={`flex h-14 w-14 ${marker === activePlayerId?.marker ? "text-blue-900" : ""} items-center justify-center border-opacity-45 bg-yellow-700 bg-opacity-20 font-['Strong_Young'] text-6xl dark:border-gray-50`}
                 key={markerIndex}
                 onClick={handleClick}
                 id={String(rowIndex * dimension + markerIndex)}
@@ -69,7 +69,9 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
           </div>
         ))}
       </div>
-      <div className="flex justify-center font-['Strong_Young'] text-black">{gameId ? gameStatus() : ''}</div>
+      <div className="flex justify-center font-['Strong_Young'] text-black">
+        {gameId ? gameStatus() : ""}
+      </div>
     </div>
   );
 };

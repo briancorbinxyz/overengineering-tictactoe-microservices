@@ -18,9 +18,9 @@ export type GameState = {
 };
 
 export type GamePlayer = {
-  index: number,
-  marker: string,
-}
+  index: number;
+  marker: string;
+};
 
 export const initialGameState: GameState = {
   gameId: null,
@@ -31,7 +31,8 @@ export const initialGameState: GameState = {
     },
     current_player_index: 0,
     players: [
-      { index: 0, marker: "X" } , { index: 1, marker: "O" } 
+      { index: 0, marker: "X" },
+      { index: 1, marker: "O" },
     ],
     completed: false,
     winning_player_index: undefined,
