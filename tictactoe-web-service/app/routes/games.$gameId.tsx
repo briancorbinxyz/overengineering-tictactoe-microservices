@@ -45,7 +45,7 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
   } else {
     // The current user is a guest in this game
     console.log("Guest entered game", params.gameId);
-    return json({ gameId: gameId }, {
+    return json({ gameId: gameId, playerId: undefined }, {
       headers: {
         "Set-Cookie": await commitSession(session),
       }
@@ -94,7 +94,7 @@ export default function Game() {
       <div className="flex justify-center font-['Strong_Young'] text-blue-900">
         Welcome {playerId !== undefined ? "Player " + playerId.marker : "Guest"}!
       </div>
-      <GameBoard state={gameEvent} game_id={gameId} />
+      <GameBoard state={gameEvent} gameId={gameId} activePlayerId={playerId} />
     </main>
   );
 }

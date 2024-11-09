@@ -11,12 +11,15 @@ import { initialGameState } from "~/models/game";
 
 export default function Index() {
   // Read
-  const { state, game_id } = initialGameState;
+  const { state, gameId } = initialGameState;
 
   // Render
   return (
     <main className="border-gray-50">
-      <GameBoard state={state} game_id={game_id} />
+      <div className="flex justify-center font-['Strong_Young'] text-blue-900">
+        Let's Play! 
+      </div>
+      <GameBoard state={state} gameId={gameId} />
     </main>
   );
 }
