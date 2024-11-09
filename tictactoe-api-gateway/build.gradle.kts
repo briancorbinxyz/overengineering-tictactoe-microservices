@@ -1,6 +1,7 @@
 plugins {
     java
     id("io.quarkus")
+    id("com.diffplug.spotless") version "6.25.0" 
 }
 
 repositories {
@@ -38,4 +39,12 @@ tasks.withType<Test> {
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-parameters")
+}
+
+spotless {
+    java {
+        removeUnusedImports()
+        googleJavaFormat("1.23.0")
+            .reflowLongStrings()
+    }
 }
