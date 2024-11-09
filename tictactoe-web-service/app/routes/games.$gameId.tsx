@@ -1,11 +1,12 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import invariant from "tiny-invariant";
 import GameBoard from "~/components/gameboard";
 import { initialGameState } from "~/models/game";
 import { commitSession, getSession } from "~/sessions";
-import { json } from "@remix-run/node";
+import gameAudioUrl from "~/audio/itty-bitty-8-bit-kevin-macleod-main-version-7983-03-13.mp3";
 
 // =============================================================================
 // Controller
@@ -13,19 +14,20 @@ import { json } from "@remix-run/node";
 
 // The live game data returnable from the loader
 type GameData = {
-  gameId: string,
-  playerId: PlayerData,
+  gameId: string;
+  playerId: PlayerData;
 };
 
 type PlayerData = {
-  index: number,
-  marker: string,
+  index: number;
+  marker: string;
 };
 
 // Remix Route: loader
 export const loader = async ({ params, request }: LoaderFunctionArgs) => {
   const session = await getSession(request.headers.get("Cookie"));
   const gameId = params.gameId;
+
   if (session.has("gameId") && session.get("gameId") === gameId) {
     console.log("Participant entered game", params.gameId);
     // The current user is a participant in this game
@@ -33,23 +35,26 @@ export const loader = async ({ params, request }: LoaderFunctionArgs) => {
     invariant(gameId, "Participating player should have a game id");
     invariant(playerId, "Participating player should have an id");
 
-    const liveGameData: GameData = { 
+    const liveGameData: GameData = {
       gameId: gameId,
       playerId: playerId,
     };
     return json(liveGameData, {
       headers: {
         "Set-Cookie": await commitSession(session),
-      }
+      },
     });
   } else {
     // The current user is a guest in this game
     console.log("Guest entered game", params.gameId);
-    return json({ gameId: gameId, playerId: undefined }, {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      }
-    });
+    return json(
+      { gameId: gameId, playerId: undefined },
+      {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      },
+    );
   }
 };
 
@@ -68,9 +73,12 @@ export default function Game() {
   invariant(gameId, "A valid game id is required");
   // - Subscribe to the game events
   const [gameEvent, setGameEvent] = useState(initialGameState.state);
+  const [gameAudio, setGameAudio] = useState<HTMLAudioElement>();
 
   useEffect(() => {
-    window.sessionStorage.setItem("activeGameId", gameId);
+    setGameAudio(new Audio(gameAudioUrl));
+    gameAudio?.play();
+      
     const eventSource = subscribeToGame(gameId);
 
     eventSource.onmessage = (event) => {
@@ -92,7 +100,8 @@ export default function Game() {
   return (
     <main className="border-gray-50">
       <div className="flex justify-center font-['Strong_Young'] text-blue-900">
-        Welcome {playerId !== undefined ? "Player " + playerId.marker : "Guest"}!
+        Welcome {playerId !== undefined ? "Player " + playerId.marker : "Guest"}
+        !
       </div>
       <GameBoard state={gameEvent} gameId={gameId} activePlayerId={playerId} />
     </main>
