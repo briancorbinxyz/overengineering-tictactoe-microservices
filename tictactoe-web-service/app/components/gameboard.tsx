@@ -36,7 +36,10 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
       if (state.current_player_index == activePlayerId.index) {
         console.log("Move selected", locationId);
         await makeMove(gameId, locationId, activePlayerId?.marker);
-        await moveAudio?.play();
+        if (moveAudio) {
+          moveAudio.currentTime = 0;
+          await moveAudio?.play();
+        }
       } else {
         // TODO: Make more visible
         console.log("Move attempted when not active player", locationId);
@@ -59,7 +62,7 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
   };
 
   return (
-    <div>
+    <div key={contents.join('')}>
       <div className="flex flex-col gap-2">
         {rows.map((row, rowIndex) => (
           <div className="flex flex-row gap-2" key={rowIndex}>
@@ -72,7 +75,6 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
                 id={String(rowIndex * dimension + markerIndex)}
               >
                 <div className="">
-                  {/* TODO: Remove the hard coding of 'X' for the placeholder */}
                   {marker}
                 </div>
               </motion.button>

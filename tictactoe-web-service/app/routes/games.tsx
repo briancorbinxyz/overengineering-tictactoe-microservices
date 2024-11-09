@@ -103,7 +103,7 @@ const Game = () => {
               <Toast message="Error - unable connect to game api gateway."></Toast>
             </footer>
           </div>
-          <div className="my-5 flex flex-col justify-start flex-grow-0">
+          <div className="my-5 flex flex-col justify-start">
             <h1
               className="font-['Bleach'] text-8xl text-black opacity-80"
               style={{ writingMode: "vertical-lr" }}
@@ -111,13 +111,13 @@ const Game = () => {
               Tic-
             </h1>
             <h1
-              className="font-['Bleach'] text-8xl text-white opacity-45 flex-grow-0"
+              className="font-['Bleach'] text-8xl text-white opacity-45"
               style={{ writingMode: "vertical-lr" }}
             >
               Tac
             </h1>
             <h1
-              className="font-['Bleach'] text-8xl text-black opacity-80 flex-grow-0"
+              className="font-['Bleach'] text-8xl text-black opacity-80"
               style={{ writingMode: "vertical-lr" }}
             >
               -Toe

@@ -75,9 +75,17 @@ export default function Game() {
   const [gameEvent, setGameEvent] = useState(initialGameState.state);
   const [gameAudio, setGameAudio] = useState<HTMLAudioElement>();
 
+  // Run once on mount
   useEffect(() => {
     setGameAudio(new Audio(gameAudioUrl));
-    gameAudio?.play();
+  }, []);
+
+  // Every time there is a new game
+  useEffect(() => {
+    if (gameAudio) {
+      gameAudio.currentTime = 0;
+      gameAudio.play();
+    }
       
     const eventSource = subscribeToGame(gameId);
 
@@ -92,9 +100,10 @@ export default function Game() {
     };
 
     return () => {
+      gameAudio?.pause();
       eventSource.close();
     };
-  }, []);
+  }, [gameId, gameAudio]);
 
   // Render
   return (
