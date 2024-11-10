@@ -3,10 +3,10 @@ import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import invariant from "tiny-invariant";
+import gameAudioUrl from "~/audio/itty-bitty-8-bit-kevin-macleod-main-version-7983-03-13.mp3";
 import GameBoard from "~/components/gameboard";
 import { initialGameState } from "~/models/game";
 import { commitSession, getSession } from "~/sessions";
-import gameAudioUrl from "~/audio/itty-bitty-8-bit-kevin-macleod-main-version-7983-03-13.mp3";
 
 // =============================================================================
 // Controller
@@ -84,14 +84,27 @@ export default function Game() {
   useEffect(() => {
     if (gameAudio) {
       gameAudio.currentTime = 0;
+      gameAudio.volume = 1;
       gameAudio.play();
     }
-      
+
     const eventSource = subscribeToGame(gameId);
 
     eventSource.onmessage = (event) => {
       console.log("Data:", event.data);
-      setGameEvent(JSON.parse(event.data).state);
+      const newState = JSON.parse(event.data).state;
+      if (newState.completed && gameAudio) {
+        setTimeout(async () => {
+          // Fade out the game audio
+          for (let i = 1; i <= 10; i++) {
+            gameAudio.volume = 1 - i * 0.1;
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
+          await gameAudio.pause();
+        }, 1000);
+        console.log("Game completed");
+      }
+      setGameEvent(newState);
     };
 
     eventSource.onerror = (error) => {
@@ -108,7 +121,7 @@ export default function Game() {
   // Render
   return (
     <main className="border-gray-50">
-      <div className="flex justify-center font-['Strong_Young'] text-blue-900">
+      <div className="flex justify-center font-['Strong_Young'] text-xl text-blue-900">
         Welcome {playerId !== undefined ? "Player " + playerId.marker : "Guest"}
         !
       </div>

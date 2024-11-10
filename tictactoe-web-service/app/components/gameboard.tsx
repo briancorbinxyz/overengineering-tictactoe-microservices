@@ -8,7 +8,6 @@ import { makeMove } from "~/services/game.api";
 const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
   const { dimension, contents } = state.board;
   const [moveAudio, setMoveAudio] = useState<HTMLAudioElement>();
-  const [gameAudio, setGameAudio] = useState<HTMLAudioElement>();
 
   // Set up audio
   useEffect(() => {
@@ -62,7 +61,7 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
   };
 
   return (
-    <div key={contents.join('')}>
+    <div key={contents.join("")}>
       <div className="flex flex-col gap-2">
         {rows.map((row, rowIndex) => (
           <div className="flex flex-row gap-2" key={rowIndex}>
@@ -74,9 +73,7 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
                 onClick={handleClick}
                 id={String(rowIndex * dimension + markerIndex)}
               >
-                <div className="">
-                  {marker}
-                </div>
+                <div className="">{marker}</div>
               </motion.button>
             ))}
           </div>
