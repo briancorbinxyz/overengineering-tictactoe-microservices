@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
-import { use } from "framer-motion/client";
 import { useEffect, useState } from "react";
 import invariant from "tiny-invariant";
-import moveAudioUrl from "~/audio/bubble-pop-ding-betacut-1-00-01.mp3";
-import loseAudioUrl from "~/audio/video-game-fail-retro-long-glitchedtones-1-00-03.mp3";
-import winAudioUrl from "~/audio/cartoon-game-upgrade-ni-sound-1-00-03.mp3";
+import drawAudioUrl from "~/audio/game-draw.mp3";
+import loseAudioUrl from "~/audio/game-lost.mp3";
+import winAudioUrl from "~/audio/game-win.mp3";
+import moveAudioUrl from "~/audio/player-move.mp3";
 import type { GameState } from "~/models/game";
 import { makeMove } from "~/services/game.api";
 
@@ -13,6 +13,7 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
   const [moveAudio, setMoveAudio] = useState<HTMLAudioElement>();
   const [loseAudio, setLoseAudio] = useState<HTMLAudioElement>();
   const [winAudio, setWinAudio] = useState<HTMLAudioElement>();
+  const [drawAudio, setDrawAudio] = useState<HTMLAudioElement>();
   const [statusText, setStatusText] = useState<string>("");
 
   // Set up audio
@@ -21,6 +22,7 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
     setMoveAudio(new Audio(moveAudioUrl));
     setLoseAudio(new Audio(loseAudioUrl));
     setWinAudio(new Audio(winAudioUrl));
+    setDrawAudio(new Audio(drawAudioUrl));
   }, []);
 
   // Break the contents array into rows based on the board's dimension
@@ -76,6 +78,10 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
         }
         return `Player ${state.players[state.winning_player_index].marker} wins!`;
       } else {
+        if (drawAudio) {
+          drawAudio.currentTime = 0;
+          drawAudio.play();
+        }
         return "It's a draw!";
       }
     } else {

@@ -1,7 +1,8 @@
 import { ActionFunctionArgs, redirect } from "@remix-run/node";
 import { Form, MetaFunction, Outlet, useNavigation } from "@remix-run/react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import clickAudioUrl from "~/audio/click.mp3";
 import Toast from "~/components/toast";
 import { startGame } from "~/models/game.server";
 import { commitSession, getSession } from "~/sessions";
@@ -45,7 +46,18 @@ const Game = () => {
   const navigation = useNavigation();
   const isIdle = Boolean(navigation.state === "idle");
   const [isPlaying, setPlaying] = useState(false);
+  const [clickAudio, setClickAudio] = useState<HTMLAudioElement>();
 
+  useEffect(() => {
+    setClickAudio(new Audio(clickAudioUrl));
+  }, []);
+
+  const handleClick = () => {
+    if (clickAudio) {
+      clickAudio.currentTime = 0;
+      clickAudio.play();
+    }
+  };
   // Render
   return (
     <div className="flex flex-col bg-yellow-500">
@@ -94,8 +106,9 @@ const Game = () => {
                   className="focus:bg-blue-850 bg-black px-4 py-2 text-white hover:bg-blue-900 disabled:bg-blue-200"
                   type="submit"
                   disabled={!isIdle}
+                  onClick={handleClick}
                 >
-                  {isIdle ? "Join Game" : "Matchmaking..."}
+                  {isIdle ? "Start Game" : "Matchmaking..."}
                 </motion.button>
               </div>
             </Form>

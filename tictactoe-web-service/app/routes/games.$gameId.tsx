@@ -3,7 +3,7 @@ import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import invariant from "tiny-invariant";
-import gameAudioUrl from "~/audio/itty-bitty-8-bit-kevin-macleod-main-version-7983-03-13.mp3";
+import gameAudioUrl from "~/audio/game-theme.mp3";
 import GameBoard from "~/components/gameboard";
 import { initialGameState } from "~/models/game";
 import { commitSession, getSession } from "~/sessions";
