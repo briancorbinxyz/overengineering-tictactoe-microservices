@@ -1,18 +1,26 @@
 import { motion } from "framer-motion";
+import { use } from "framer-motion/client";
 import { useEffect, useState } from "react";
 import invariant from "tiny-invariant";
 import moveAudioUrl from "~/audio/bubble-pop-ding-betacut-1-00-01.mp3";
+import loseAudioUrl from "~/audio/video-game-fail-retro-long-glitchedtones-1-00-03.mp3";
+import winAudioUrl from "~/audio/cartoon-game-upgrade-ni-sound-1-00-03.mp3";
 import type { GameState } from "~/models/game";
 import { makeMove } from "~/services/game.api";
 
 const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
   const { dimension, contents } = state.board;
   const [moveAudio, setMoveAudio] = useState<HTMLAudioElement>();
+  const [loseAudio, setLoseAudio] = useState<HTMLAudioElement>();
+  const [winAudio, setWinAudio] = useState<HTMLAudioElement>();
+  const [statusText, setStatusText] = useState<string>("");
 
   // Set up audio
   useEffect(() => {
     // Audio is only available on the browser (client) side
     setMoveAudio(new Audio(moveAudioUrl));
+    setLoseAudio(new Audio(loseAudioUrl));
+    setWinAudio(new Audio(winAudioUrl));
   }, []);
 
   // Break the contents array into rows based on the board's dimension
@@ -48,9 +56,24 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
     }
   };
 
+  useEffect(() => {
+    setStatusText(gameStatus());
+  }, [state]);
+
   const gameStatus = () => {
     if (state.completed) {
       if (state.winning_player_index !== undefined) {
+        if (state.winning_player_index !== activePlayerId?.index) {
+          if (loseAudio) {
+            loseAudio.currentTime = 0;
+            loseAudio.play();
+          }
+        } else {
+          if (winAudio) {
+            winAudio.currentTime = 0;
+            winAudio.play();
+          }
+        }
         return `Player ${state.players[state.winning_player_index].marker} wins!`;
       } else {
         return "It's a draw!";
@@ -80,7 +103,7 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
         ))}
       </div>
       <div className="flex justify-center font-['Strong_Young'] text-black">
-        {gameId ? gameStatus() : ""}
+        {gameId ? statusText : ""}
       </div>
     </div>
   );
