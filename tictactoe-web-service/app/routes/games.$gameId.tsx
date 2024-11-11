@@ -104,12 +104,23 @@ export default function Game() {
 
   // Every time there is a new game
   useEffect(() => {
-    if (!audioContext.muteMusic && gameAudio) {
-      gameAudio.currentTime = 0;
-      gameAudio.volume = 1;
-      gameAudio.play();
+    if (!gameAudio) {
+      return;
     }
 
+    if (audioContext.muteMusic) {
+      gameAudio.volume = 0;
+    } else {
+      gameAudio.volume = 1;
+    }
+  }, [gameId, gameAudio, audioContext.muteMusic]);
+
+  // Every time there is a new game
+  useEffect(() => {
+    if (gameAudio) {
+      gameAudio.currentTime = 0;
+      gameAudio.play();
+    }
     const eventSource = subscribeToGame(gameId);
 
     eventSource.onmessage = (event) => {
@@ -118,11 +129,13 @@ export default function Game() {
       if (newState.completed && gameAudio) {
         setTimeout(async () => {
           // Fade out the game audio
+          const initialVolume = gameAudio.volume; 
+          const fadeRate = initialVolume / 10;
           for (let i = 1; i <= 10; i++) {
-            gameAudio.volume = 1 - i * 0.1;
+            gameAudio.volume = initialVolume - i * fadeRate;
             await new Promise((resolve) => setTimeout(resolve, 500));
           }
-          await gameAudio.pause();
+          gameAudio.pause();
         }, 1000);
         console.log("Game completed");
       }
@@ -138,7 +151,7 @@ export default function Game() {
       gameAudio?.pause();
       eventSource.close();
     };
-  }, [gameId, gameAudio, audioContext.muteMusic]);
+  }, [gameId, gameAudio]);
 
   // Render
   return (

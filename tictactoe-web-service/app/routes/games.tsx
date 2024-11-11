@@ -73,7 +73,13 @@ const Game = () => {
     >
       <div className="flex flex-col bg-yellow-500">
         <div className="overflow:hidden h-12 bg-black">
-          <nav className="float-right px-2 py-1 text-center">
+          <nav className="float-right flex flex-row gap-3 px-2 py-1 text-center">
+            <button id="mute-sfx" onClick={() => setMuteSfx(!muteSfx)}>
+              {muteSfx ? "Unmute Sfx" : "Mute Sfx"}
+            </button>
+            <button id="mute-music" onClick={() => setMuteMusic(!muteMusic)}>
+              {muteMusic ? "Unmute Music" : "Mute Music"}
+            </button>
             <div id="login">
               <svg
                 className="h-[38px] w-[38px] text-gray-800 dark:text-white"
