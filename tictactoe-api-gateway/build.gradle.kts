@@ -46,5 +46,6 @@ spotless {
         removeUnusedImports()
         googleJavaFormat("1.23.0")
             .reflowLongStrings()
+        targetExclude("build/*/java/**/quarkus-generated-sources/**/*.java")
     }
 }

@@ -18,9 +18,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.xxdc.oss.example.bot.BotStrategy;
 import org.xxdc.oss.example.service.Board;
+import org.xxdc.oss.example.service.GameExistsRequest;
+import org.xxdc.oss.example.service.GameExistsResponse;
 import org.xxdc.oss.example.service.GameMoveRequest;
 import org.xxdc.oss.example.service.GameMoveResponse;
 import org.xxdc.oss.example.service.GameUpdate;
+import org.xxdc.oss.example.service.GamesActiveRequest;
+import org.xxdc.oss.example.service.GamesActiveResponse;
 import org.xxdc.oss.example.service.JoinRequest;
 import org.xxdc.oss.example.service.JoinResponse;
 import org.xxdc.oss.example.service.Player;
@@ -237,6 +241,10 @@ public class GameService implements TicTacToeGame {
       return activeGamesById.get(gameId);
     }
 
+    public java.util.Set<String> getActiveGameIds() {
+      return activeGamesById.keySet();
+    }
+
     public Multi<GameUpdate> subscribeToGame(SubscriptionRequest request) {
       var game = getActiveGame(request.getGameId());
       if (game == null) {
@@ -328,5 +336,18 @@ public class GameService implements TicTacToeGame {
       return Multi.createFrom().failure(new RuntimeException("Game not found"));
     }
     return gameManager.subscribeToGame(request);
+  }
+
+  @Override
+  public Uni<GameExistsResponse> exists(GameExistsRequest request) {
+    var game = gameManager.getActiveGame(request.getGameId());
+    return Uni.createFrom().item(GameExistsResponse.newBuilder().setGameId(request.getGameId()).setExists(game != null).build());
+  }
+
+  @Override
+  public Uni<GamesActiveResponse> activeGames(GamesActiveRequest request) {
+    return Uni.createFrom()
+        .item(
+            GamesActiveResponse.newBuilder().addAllGameId(gameManager.getActiveGameIds()).build());
   }
 }

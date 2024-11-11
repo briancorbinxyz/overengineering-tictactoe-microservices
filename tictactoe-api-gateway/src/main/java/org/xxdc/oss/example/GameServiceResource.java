@@ -16,6 +16,8 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 import org.xxdc.oss.example.service.GameMoveRequest;
+import org.xxdc.oss.example.service.GameExistsRequest;
+import org.xxdc.oss.example.service.GamesActiveRequest;
 import org.xxdc.oss.example.service.JoinRequest;
 import org.xxdc.oss.example.service.SubscriptionRequest;
 import org.xxdc.oss.example.service.TicTacToeGame;
@@ -35,6 +37,22 @@ public class GameServiceResource {
             JoinRequest.newBuilder().setMessage("Can I join?").setName("Tahlia").build())
         .log("Game.Joiner")
         .onItem()
+        .transform(this::asJson);
+  }
+
+  @GET
+  @Path("/ids")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<String> activeGames() {
+    return game.activeGames(GamesActiveRequest.newBuilder().build()).onItem()
+        .transform(this::asJson);
+  }
+
+  @GET
+  @Path("/ids/{id}/exists")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<String> gameExists(@PathParam("id") String id) {
+    return game.exists(GameExistsRequest.newBuilder().setGameId(id).build()).onItem()
         .transform(this::asJson);
   }
 

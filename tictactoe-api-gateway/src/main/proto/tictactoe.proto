@@ -14,14 +14,41 @@ service TicTacToeGame {
     rpc JoinGame (JoinRequest) returns (JoinResponse) {}
     rpc MakeMove (GameMoveRequest) returns (GameMoveResponse) {} 
     rpc Subscribe (SubscriptionRequest) returns (stream GameUpdate) {}
+    rpc Exists (GameExistsRequest) returns (GameExistsResponse) {}
+    rpc ActiveGames (GamesActiveRequest) returns (GamesActiveResponse) {}
 }
 
+// The reponse to check if a game exists
+message GamesActiveRequest {
+}
+// The reponse to check if a game exists
+message GamesActiveResponse {
+    repeated string game_id = 1;
+}
+// The request to check if a game exists
+message GameExistsRequest {
+    string game_id = 1;
+}
+
+// The reponse to check if a game exists
+message GameExistsResponse {
+    string game_id = 1;
+    bool exists = 2;
+}
+
+enum GameLevel {
+    EASY = 0;
+    MEDIUM = 1;
+    HARD = 2;
+}
 // The request message containing the user message
 message JoinRequest {
     string request_id = 1;
     string name = 2;
     optional string message = 3;
+    optional GameLevel bot_level = 4;
 }
+
 
 // The response message containing the join response
 message JoinResponse {
