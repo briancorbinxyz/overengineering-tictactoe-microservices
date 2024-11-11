@@ -7,3 +7,7 @@ export const makeMove = async (
     `http://localhost:9010/games/${gameId}/makeMove?location=${location}`,
   );
 };
+
+export const gameExists = async (gameId: string) => {
+  return fetch(`http://localhost:9010/games/${gameId}/exists`);
+};

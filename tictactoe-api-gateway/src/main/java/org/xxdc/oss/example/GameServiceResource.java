@@ -49,7 +49,7 @@ public class GameServiceResource {
   }
 
   @GET
-  @Path("/ids/{id}/exists")
+  @Path("{id}/exists")
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<String> gameExists(@PathParam("id") String id) {
     return game.exists(GameExistsRequest.newBuilder().setGameId(id).build()).onItem()

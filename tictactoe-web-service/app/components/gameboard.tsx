@@ -1,11 +1,10 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import invariant from "tiny-invariant";
-import drawAudioUrl from "~/audio/game-draw.mp3";
+import moveAudioUrl from "~/audio/player-move.mp3";
+import drawAudioUrl from "~/audio/game-draw.mp3"
 import loseAudioUrl from "~/audio/game-lost.mp3";
 import winAudioUrl from "~/audio/game-win.mp3";
-import moveAudioUrl from "~/audio/player-move.mp3";
-import clickFailAudioUrl from "~/audio/click-fail.mp3";
 import type { GameState } from "~/models/game";
 import { makeMove } from "~/services/game.api";
 
@@ -15,7 +14,6 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
   const [loseAudio, setLoseAudio] = useState<HTMLAudioElement>();
   const [winAudio, setWinAudio] = useState<HTMLAudioElement>();
   const [drawAudio, setDrawAudio] = useState<HTMLAudioElement>();
-  const [clickFailAudio, setClickFailAudio] = useState<HTMLAudioElement>();
   const [statusText, setStatusText] = useState<string>("");
 
   // Set up audio
@@ -25,7 +23,6 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
     setLoseAudio(new Audio(loseAudioUrl));
     setWinAudio(new Audio(winAudioUrl));
     setDrawAudio(new Audio(drawAudioUrl));
-    setClickFailAudio(new Audio(clickFailAudioUrl));
   }, []);
 
   // Break the contents array into rows based on the board's dimension
@@ -47,23 +44,13 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
     if (gameId && activePlayerId && !state.completed) {
       if (state.current_player_index == activePlayerId.index) {
         console.log("Move selected", locationId);
-        if (state.board.contents[locationId] === "") {
-          if (moveAudio) {
-            moveAudio.currentTime = 0;
-            await moveAudio?.play();
-          }
-          await makeMove(gameId, locationId, activePlayerId?.marker);
-        } else {
-          if (clickFailAudio) {
-            clickFailAudio.currentTime = 0;
-            clickFailAudio.play();
-          }
+        await makeMove(gameId, locationId, activePlayerId?.marker);
+        if (moveAudio) {
+          moveAudio.currentTime = 0;
+          await moveAudio?.play();
         }
       } else {
-        if (clickFailAudio) {
-          clickFailAudio.currentTime = 0;
-          clickFailAudio.play();
-        }
+        // TODO: Make more visible
         console.log("Move attempted when not active player", locationId);
       }
     } else {

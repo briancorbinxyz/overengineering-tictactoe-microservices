@@ -1,11 +1,13 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useNavigate } from "@remix-run/react";
+import { c } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
 import { useEffect, useState } from "react";
 import invariant from "tiny-invariant";
 import gameAudioUrl from "~/audio/game-theme.mp3";
 import GameBoard from "~/components/gameboard";
 import { initialGameState } from "~/models/game";
+import { gameExists } from "~/services/game.api";
 import { commitSession, getSession } from "~/sessions";
 
 // =============================================================================
@@ -74,6 +76,25 @@ export default function Game() {
   // - Subscribe to the game events
   const [gameEvent, setGameEvent] = useState(initialGameState.state);
   const [gameAudio, setGameAudio] = useState<HTMLAudioElement>();
+  const navigate = useNavigate();
+
+  // Redirect if the game doesn't exist
+  useEffect(() => {
+    const checkExists = async () => {
+      const exists = await gameExists(gameId)
+        .then((r) => r.json())
+        .then((r) => 'exists' in r && r.exists);
+        return exists;
+    };
+    checkExists().then((exists) => {
+      if (!exists) {
+        console.log("Attempted to join a non-existent game", gameId);
+        navigate('/games');
+      } else {
+        console.log("Starting subscription to game", gameId);
+      }
+    });
+  }, [gameId, navigate]);
 
   // Run once on mount
   useEffect(() => {
@@ -122,10 +143,10 @@ export default function Game() {
   return (
     <main className="border-gray-50">
       <div className="flex justify-center font-['Strong_Young'] text-xl text-blue-900">
-        Welcome {playerId !== undefined ? "Player " + playerId.marker : "Guest"}
-        !
+        Welcome {playerId && 'marker' in playerId ? "Player " + playerId.marker : "Guest"}!
       </div>
       <GameBoard state={gameEvent} gameId={gameId} activePlayerId={playerId} />
     </main>
   );
+
 }

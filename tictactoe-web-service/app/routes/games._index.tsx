@@ -17,7 +17,7 @@ export default function Index() {
   return (
     <main className="border-gray-50">
       <div className="flex justify-center font-['Strong_Young'] text-blue-900">
-        Let's Play!
+        Let&apos;s Play!
       </div>
       <GameBoard state={state} gameId={gameId} />
     </main>
