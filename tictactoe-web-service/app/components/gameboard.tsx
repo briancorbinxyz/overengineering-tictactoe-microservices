@@ -5,6 +5,7 @@ import drawAudioUrl from "~/audio/game-draw.mp3";
 import loseAudioUrl from "~/audio/game-lost.mp3";
 import winAudioUrl from "~/audio/game-win.mp3";
 import moveAudioUrl from "~/audio/player-move.mp3";
+import clickFailAudioUrl from "~/audio/click-fail.mp3";
 import GameAudioContext from "~/contexts/gameaudio.context";
 import type { GameState } from "~/models/game";
 import { makeMove } from "~/services/game.api";
@@ -15,6 +16,7 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
   const [loseAudio, setLoseAudio] = useState<HTMLAudioElement>();
   const [winAudio, setWinAudio] = useState<HTMLAudioElement>();
   const [drawAudio, setDrawAudio] = useState<HTMLAudioElement>();
+  const [clickFailAudio, setClickFailAudio] = useState<HTMLAudioElement>();
   const [statusText, setStatusText] = useState<string>("");
   const audioContext = useContext(GameAudioContext);
 
@@ -25,6 +27,7 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
     setLoseAudio(new Audio(loseAudioUrl));
     setWinAudio(new Audio(winAudioUrl));
     setDrawAudio(new Audio(drawAudioUrl));
+    setClickFailAudio(new Audio(clickFailAudioUrl));
   }, []);
 
   // Break the contents array into rows based on the board's dimension
@@ -46,13 +49,25 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
     if (gameId && activePlayerId && !state.completed) {
       if (state.current_player_index == activePlayerId.index) {
         console.log("Move selected", locationId);
-        await makeMove(gameId, locationId, activePlayerId?.marker);
-        if (!audioContext.muteSfx && moveAudio) {
-          moveAudio.currentTime = 0;
-          await moveAudio?.play();
+        if (state.board.contents[locationId] === "") {
+          await makeMove(gameId, locationId, activePlayerId?.marker);
+          if (!audioContext.muteSfx && moveAudio) {
+            moveAudio.currentTime = 0;
+            await moveAudio.play();
+          }
+        } else {
+          if (!audioContext.muteSfx && clickFailAudio) {
+            clickFailAudio.currentTime = 0;
+            await clickFailAudio.play();
+          }
+          console.log("Move attempted when not empty", locationId);
         }
       } else {
         // TODO: Make more visible
+        if (!audioContext.muteSfx && clickFailAudio) {
+          clickFailAudio.currentTime = 0;
+          await clickFailAudio.play();
+        }
         console.log("Move attempted when not active player", locationId);
       }
     } else {
@@ -61,35 +76,35 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
   };
 
   useEffect(() => {
-    setStatusText(gameStatus());
-  }, [state]);
-
-  const gameStatus = () => {
-    if (state.completed) {
-      if (state.winning_player_index !== undefined) {
-        if (state.winning_player_index !== activePlayerId?.index) {
-          if (!audioContext.muteSfx && loseAudio) {
-            loseAudio.currentTime = 0;
-            loseAudio.play();
+    const gameStatus = () => {
+      if (state.completed) {
+        if (state.winning_player_index !== undefined) {
+          if (state.winning_player_index !== activePlayerId?.index) {
+            if (!audioContext.muteSfx && loseAudio) {
+              loseAudio.currentTime = 0;
+              loseAudio.play();
+            }
+          } else {
+            if (!audioContext.muteSfx && winAudio) {
+              winAudio.currentTime = 0;
+              winAudio.play();
+            }
           }
+          return `Player ${state.players[state.winning_player_index].marker} wins!`;
         } else {
-          if (!audioContext.muteSfx && winAudio) {
-            winAudio.currentTime = 0;
-            winAudio.play();
+          if (!audioContext.muteSfx && drawAudio) {
+            drawAudio.currentTime = 0;
+            drawAudio.play();
           }
+          return "It's a draw!";
         }
-        return `Player ${state.players[state.winning_player_index].marker} wins!`;
       } else {
-        if (!audioContext.muteSfx && drawAudio) {
-          drawAudio.currentTime = 0;
-          drawAudio.play();
-        }
-        return "It's a draw!";
+        return `Turn: ${state.players[state.current_player_index].marker}`;
       }
-    } else {
-      return `Turn: ${state.players[state.current_player_index].marker}`;
-    }
-  };
+    };
+
+    setStatusText(gameStatus());
+  }, [activePlayerId?.index, audioContext.muteSfx, drawAudio, loseAudio, state, winAudio]);
 
   return (
     <div key={contents.join("")}>
