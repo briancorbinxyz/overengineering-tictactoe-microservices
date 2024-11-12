@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { useContext, useEffect, useState } from "react";
 import invariant from "tiny-invariant";
+import clickFailAudioUrl from "~/audio/click-fail.mp3";
 import drawAudioUrl from "~/audio/game-draw.mp3";
 import loseAudioUrl from "~/audio/game-lost.mp3";
 import winAudioUrl from "~/audio/game-win.mp3";
 import moveAudioUrl from "~/audio/player-move.mp3";
-import clickFailAudioUrl from "~/audio/click-fail.mp3";
 import GameAudioContext from "~/contexts/gameaudio.context";
 import type { GameState } from "~/models/game";
 import { makeMove } from "~/services/game.api";
@@ -104,7 +104,14 @@ const GameBoard = ({ state, gameId, activePlayerId }: GameState) => {
     };
 
     setStatusText(gameStatus());
-  }, [activePlayerId?.index, audioContext.muteSfx, drawAudio, loseAudio, state, winAudio]);
+  }, [
+    activePlayerId?.index,
+    audioContext.muteSfx,
+    drawAudio,
+    loseAudio,
+    state,
+    winAudio,
+  ]);
 
   return (
     <div key={contents.join("")}>

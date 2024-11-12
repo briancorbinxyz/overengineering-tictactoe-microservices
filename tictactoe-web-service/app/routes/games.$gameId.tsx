@@ -129,7 +129,7 @@ export default function Game() {
       if (newState.completed && gameAudio) {
         setTimeout(async () => {
           // Fade out the game audio
-          const initialVolume = gameAudio.volume; 
+          const initialVolume = gameAudio.volume;
           const fadeRate = initialVolume / 10;
           for (let i = 1; i <= 10; i++) {
             gameAudio.volume = initialVolume - i * fadeRate;
