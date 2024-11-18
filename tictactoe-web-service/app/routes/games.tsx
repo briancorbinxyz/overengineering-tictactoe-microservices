@@ -81,8 +81,8 @@ const Game = () => {
       value={{ muteMusic: muteMusic, muteSfx: muteSfx }}
     >
       <div className="flex flex-col bg-yellow-500">
-        <div className="overflow:hidden h-12 bg-black">
-          <nav className="float-right flex flex-row gap-3 px-2 py-1 text-center">
+        <div className="overflow:hidden h-[theme(spacing.12)] bg-black">
+          <nav className="float-right flex flex-row gap-3 px-2 py-1 text-center ">
             <button id="mute-sfx" onClick={() => {
                 setMuteSfx(!muteSfx);
                 window?.localStorage.setItem("muteSfx", (!muteSfx).toString());
@@ -181,7 +181,7 @@ const Game = () => {
             </div>
           </nav>
         </div>
-        <div className="flex h-screen items-center justify-center bg-yellow-500">
+        <div className="flex h-[calc(100vh-theme(spacing.12)*2)] items-center justify-center bg-yellow-500">
           <div className="flex">
             <div className="flex flex-col items-center gap-2">
               <div>
@@ -236,6 +236,9 @@ const Game = () => {
               </h1>
             </div>
           </div>
+        </div>
+        <div className="h-[theme(spacing.12)] flow flow-row items-center justify-center text-center">
+          <div>Credits</div>
         </div>
       </div>
     </GameAudioContext.Provider>
