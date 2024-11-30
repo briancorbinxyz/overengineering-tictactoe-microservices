@@ -5,7 +5,8 @@ Over-Engineering Tic-Tac-Toe Microservices
 
 Enterprise full-stack implementation for [Over-Engineered Tic-Tac-Toe](https://github.com/briancorbinxyz/overengineering-tictactoe) (Tic-Tac-Toe in Java deliberately over-engineered to apply features of Java introduced over time.)
 <img width="824" alt="overengineering tic-tac-toe the game" src="https://github.com/user-attachments/assets/7be48433-5bb6-4169-a8a9-8f4c69480c74">
-This uses the PERQ stack:
+
+This uses what I like to call the PERQ stack:
 
 - [Prisma](https://www.prisma.io)
 - [Express](https://expressjs.com/)
