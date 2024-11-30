@@ -32,9 +32,9 @@ WIP: Developed both due to my daughter's complaints that she didn't want to use 
 
 After installing the build dependencies.
 
-1. Start [tictactoe-game-service]: `cd tictactoe-game-service && quarkus dev`
-1. Start [tictactoe-api-gateway]: `cd tictactoe-api-gateway && quarkus dev`
-1. Start [tictactoe-web-service]: `cd tictactoe-web-service && npm install & npm run dev`
+1. Start [tictactoe-game-service|tictactoe-game-service]: `cd tictactoe-game-service && quarkus dev`
+1. Start [tictactoe-api-gateway|tictactoe-api-gateway]: `cd tictactoe-api-gateway && quarkus dev`
+1. Start [tictactoe-web-service|tictactoe-web-service]: `cd tictactoe-web-service && npm install & npm run dev`
 1. Navigate to http://localhost:5173/games
 
 ---
