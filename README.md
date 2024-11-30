@@ -17,6 +17,8 @@ For performant, modern enterprise Java-based cloud native services with Remix/Re
 
 WIP: Developed both due to my daughter's complaints that she didn't want to use the command-line and as a full-stack intermission/playground to pair with the ongoing blog post: [Road to JDK 25 - Over-Engineering Tic-Tac-Toe](https://thelifeof.briancorbin.xyz/Library/03-Resources/Road-to-JDK-25---Over-Engineering-Tic-Tac-Toe!) also serialized to Medium @ [Road to JDK 25 - Over-Engineering Tic-Tac-Toe On Medium](https://briancorbinxyz.medium.com/list/road-to-jdk-25-d0f656f66a8f).
 
+Nothing says over-engineering like a full-stack service implementation just to play tic-tac-toe!
+
 ### Build Dependencies
 
 - NodeJS
