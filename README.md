@@ -28,7 +28,13 @@ Nothing says over-engineering like a full-stack service implementation just to p
 
 - Basic 3x3 Tic-Tac-Toe functionality supported: Player vs Player, Player vs Bot
 - Advanced: Sound effects, music, Persistent sound configuration
-- Pending: Tests, Error Handling, Configurability, Administration, Timeouts, Non-standard game setups, Analytics, Cloud configuration etc.
+- Pending: Tests, Error Handling, Configurability, Administration, Timeouts, Non-standard game setups, Analytics, Cloud configuration, Network play etc.
+
+### Services
+
+1. [tictactoe-game-service](tictactoe-game-service): gRPC-based service for game logic and game management
+1. [tictactoe-api-gateway](tictactoe-api-gateway): REST service for game api
+1. [tictactoe-web-service](tictactoe-web-service): Remix/React service for game UI
 
 ### Starting services
 
@@ -38,5 +44,6 @@ After installing the build dependencies.
 1. Start [tictactoe-api-gateway](tictactoe-api-gateway): `cd tictactoe-api-gateway && quarkus dev`
 1. Start [tictactoe-web-service](tictactoe-web-service): `cd tictactoe-web-service && npm install & npm run dev`
 1. Navigate to http://localhost:5173/games
+1. Hit "Start Game" and wait to play vs. bot, Otherwise open another private window to http:/localhost:5173 and Hit "Start Game" again to play, player vs. player.
 
 ---
