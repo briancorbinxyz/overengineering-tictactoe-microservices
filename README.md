@@ -44,6 +44,6 @@ After installing the build dependencies.
 1. Start [tictactoe-api-gateway](tictactoe-api-gateway): `cd tictactoe-api-gateway && quarkus dev`
 1. Start [tictactoe-web-service](tictactoe-web-service): `cd tictactoe-web-service && npm install & npm run dev`
 1. Navigate to http://localhost:5173/games
-1. Hit "Start Game" and wait to play vs. bot, Otherwise open another private window to http:/localhost:5173 and Hit "Start Game" again to play, player vs. player.
+1. Hit "Start Game" and wait to play vs. bot, Otherwise open another private window to http://localhost:5173/games and Hit "Start Game" again to play, player vs. player.
 
 ---
