@@ -32,9 +32,9 @@ Nothing says over-engineering like a full-stack service implementation just to p
 
 ### Services
 
-1. [tictactoe-game-service](tictactoe-game-service): gRPC-based service for game logic and game management
-1. [tictactoe-api-gateway](tictactoe-api-gateway): REST service for game api
-1. [tictactoe-web-service](tictactoe-web-service): Remix/React service for game UI
+1. [tictactoe-game-service](tictactoe-game-service): gRPC-based service for game logic and game management (Java/Quarkus)
+1. [tictactoe-api-gateway](tictactoe-api-gateway): REST service for game api (Java/Quarkus)
+1. [tictactoe-web-service](tictactoe-web-service): Web service for game UI (Typescript/Remix)
 
 ### Starting services
 
