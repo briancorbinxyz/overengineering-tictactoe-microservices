@@ -36,14 +36,42 @@ Nothing says over-engineering like a full-stack service implementation just to p
 1. [tictactoe-api-gateway](tictactoe-api-gateway): REST service for game api (Java/Quarkus)
 1. [tictactoe-web-service](tictactoe-web-service): Web service for game UI (Typescript/Remix)
 
-### Starting services
+### Quick Start
 
-After installing the build dependencies.
+#### Dependency Installation
+
+If you don't have Java 23 installed on your system you can install it first with SDKMAN (Windows Users should use WSL: https://sdkman.io/install/):
+
+```bash
+curl -s "https://get.sdkman.io" | bash
+```
+
+Using SDKMAN you can then easily install Java Dependencies:
+
+```bash
+sdk install java 23-tem
+sdk install quarkus
+sdk install gradle
+```
+
+If you don't have Node installed on your system you can install it using NVM:
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+
+# Download and install Node.js:
+nvm install 22
+node -v
+```
+
+#### Starting services
+
+After installing the build dependencies you will need to run all services in order to develop against/use the game.
 
 1. Start [tictactoe-game-service](tictactoe-game-service): `cd tictactoe-game-service && quarkus dev`
 1. Start [tictactoe-api-gateway](tictactoe-api-gateway): `cd tictactoe-api-gateway && quarkus dev`
 1. Start [tictactoe-web-service](tictactoe-web-service): `cd tictactoe-web-service && npm install & npm run dev`
 1. Navigate to http://localhost:5173/games
-1. Hit "Start Game" and wait to play vs. bot, Otherwise open another private window to http://localhost:5173/games and Hit "Start Game" again to play, player vs. player.
+1. Hit "Start Game" and wait to play vs. bot. Alternatively, open another private window to http://localhost:5173/games and Hit "Start Game" again to play player vs. player, locally.
 
 ---
